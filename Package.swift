@@ -4,16 +4,16 @@
 import PackageDescription
 
 let package = Package(
-    name: "SwiftUICalendarKit",
+    name: "CalendarKit",
     platforms: [.iOS(.v15)],
     products: [
         .library(
-            name: "SwiftUICalendarKit",
-            targets: ["SwiftUICalendarKit"]),
+            name: "CalendarKit",
+            targets: ["CalendarKit"]),
     ],
     targets: [
         .target(
-            name: "SwiftUICalendarKit",
+            name: "CalendarKit",
             dependencies: []),
     ]
 )
