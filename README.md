@@ -3,7 +3,8 @@
 The SwiftUI Calendar package provides a customizable calendar view layout for SwiftUI applications. It allows you to display a calendar interface with active and disabled dates, navigate between months, and select dates.
 
 ## Features
-![Simulator Screen Recording - iPhone 14 Pro - 2023-06-27 at 16 14 34](https://github.com/Bereyziat-Development/CalendarKit/assets/101000022/67458b88-2c37-4344-ab5a-bf521be865f9)
+
+![Simulator Screen Recording - iPhone 14 - 2023-06-27 at 16 13 48](https://github.com/Bereyziat-Development/CalendarKit/assets/101000022/fff8d977-0514-4adc-9873-cd024288dafe)
 
 
 Display a calendar interface with month navigation
@@ -47,7 +48,8 @@ This View also serves as an example for this library.
 2. If you have more adavanced need you can use the CalendarLayout and customise it according to your needs.
 3. Result:
 
-![Simulator Screen Recording - iPhone 14 - 2023-06-27 at 16 13 48](https://github.com/Bereyziat-Development/CalendarKit/assets/101000022/20b81fde-0b84-4eff-b39d-935c25b35342)
+![Simulator Screen Recording - iPhone 14 Pro - 2023-06-27 at 16 14 34](https://github.com/Bereyziat-Development/CalendarKit/assets/101000022/5e684f14-f96e-4774-acb6-55a6760696d6)
+
 
 ## License
 This library is available under the MIT license. See the LICENSE file for more information.
