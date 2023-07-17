@@ -153,12 +153,66 @@ public struct MonthCalendarDatePicker: View {
     
     @ViewBuilder
     private func Title(date: Date) -> some View {
-        // Implementation of Title view omitted for brevity
+        HStack {
+            Text(DateFormatter.monthYear.string(from: date).capitalized)
+                .padding(.vertical)
+                .font(.headline)
+            Spacer()
+            Button {
+                withAnimation {
+                    guard let newDate = calendar.date(
+                        byAdding: .month,
+                        // replace with date
+                        value: -1,
+                        to: displayMonth
+                    ) else {
+                        return
+                    }
+                    displayMonth = newDate
+                }
+            } label: {
+                Label(
+                    title: { Text("Previous") },
+                    icon: { Image(systemName: "chevron.left") }
+                )
+                
+                .labelStyle(IconOnlyLabelStyle())
+                .padding(.horizontal)
+                .frame(maxHeight: .infinity)
+            }
+            Button {
+                withAnimation {
+                    guard let newDate = calendar.date(
+                        byAdding: .month,
+                        value: 1,
+                        to: displayMonth
+                    ) else {
+                        return
+                    }
+                    displayMonth = newDate
+                }
+            } label: {
+                Label(
+                    title: { Text("Next") },
+                    icon: { Image(systemName: "chevron.right") }
+                )
+                .labelStyle(IconOnlyLabelStyle())
+                .padding(.horizontal)
+                .frame(maxHeight: .infinity)
+            }
+            .buttonStyle(.plain)
+        }
+        .buttonStyle(.plain)
+        .padding(.bottom, 6)
     }
     
     @ViewBuilder
     private func Header(date: Date) -> some View {
-        // Implementation of Header view omitted for brevity
+        Text(DateFormatter.weekDay
+            .string(from: date)
+            .uppercased()
+        )
+        .foregroundColor(Color.black)
     }
 }
 
