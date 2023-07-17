@@ -20,6 +20,7 @@ public struct MonthCalendarDatePicker: View {
     private let activeStrokeColor: Color
     private let disabledCellFillColor: Color
     private let activeCellFontColor: Color
+    private let showOverlay: Bool
     
     // MARK: Constants
     
@@ -41,7 +42,8 @@ public struct MonthCalendarDatePicker: View {
         disabledCellFont: Font = .system(size: 16),
         activeStrokeColor: Color = .orange,
         disabledCellFillColor: Color = .clear,
-        activeCellFontColor: Color = .white
+        activeCellFontColor: Color = .white,
+        showOverlay: Bool = false
     ) {
         _selectedDate = selectedDate
         _displayMonth = State(initialValue: now)
@@ -54,6 +56,7 @@ public struct MonthCalendarDatePicker: View {
         self.activeStrokeColor = activeStrokeColor
         self.disabledCellFillColor = disabledCellFillColor
         self.activeCellFontColor = activeCellFontColor
+        self.showOverlay = showOverlay
     }
     
     // MARK: initialize with an optional startDate and an optional endDate
@@ -113,29 +116,32 @@ public struct MonthCalendarDatePicker: View {
     
     @ViewBuilder
     private func ActiveCell(date: Date) -> some View {
-        let isDateSelected = calendar.isDate(date, inSameDayAs: selectedDate)
-        let isActiveCell = calendar.isDate(date, inSameDayAs: now)
-        let isActiveRange = activeDateRanges?.contains { $0.contains(date) } ?? false
-        let activeCellFillColor = isDateSelected ? activeCellColor : isActiveRange ? activeRangeColor ?? activeCellColor.opacity(0.5) : activeCellColor.opacity(0.5)
-        let activeCellStrokeColor = isActiveCell ? activeStrokeColor : activeCellColor
-        
-        Button {
-            selectedDate = date
-        } label: {
-            ZStack {
-                Circle()
-                    .fill(activeCellFillColor)
-                    .frame(width: 40, height: 40)
-                    .overlay(
-                        Circle().stroke(activeCellStrokeColor, lineWidth: 2)
-                    )
-                Text(DateFormatter.dayFormatter.string(from: date))
-                    .font(activeCellFont)
-                    .foregroundColor(activeCellFontColor)
+            let isDateSelected = calendar.isDate(date, inSameDayAs: selectedDate)
+            let isActiveCell = calendar.isDate(date, inSameDayAs: now)
+            let isActiveRange = activeDateRanges?.contains { $0.contains(date) } ?? false
+            let activeCellFillColor = isDateSelected ? activeCellColor : isActiveRange ? activeRangeColor ?? activeCellColor.opacity(0.5) : activeCellColor.opacity(0.5)
+            let activeCellStrokeColor = activeCellColor
+            
+            Button {
+                selectedDate = date
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(activeCellFillColor)
+                        .frame(width: 40, height: 40)
+                    
+                    if showOverlay && (isActiveCell || isDateSelected) {
+                        Circle()
+                            .stroke(activeCellStrokeColor, lineWidth: 2)
+                    }
+                    
+                    Text(DateFormatter.dayFormatter.string(from: date))
+                        .font(activeCellFont)
+                        .foregroundColor(activeCellFontColor)
+                }
             }
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
-    }
     
     
     @ViewBuilder
@@ -230,7 +236,7 @@ struct CalendarView_Previews: PreviewProvider {
         
         var body: some View {
             NavigationView {
-                MonthCalendarDatePicker(selectedDate: $selectedDate, activeDateRanges: [DateRange(startDate: Date(), endDate: twoWeeksFromNow)], activeCellColor: .green, activeRangeColor: .green.opacity(0.5), disabledCellFontColor: .white, activeCellFont: .caption2, disabledCellFont: .caption, activeStrokeColor: .yellow, disabledCellFillColor: .gray, activeCellFontColor: .white)
+                MonthCalendarDatePicker(selectedDate: $selectedDate, activeDateRanges: [DateRange(startDate: Date(), endDate: twoWeeksFromNow)], activeCellColor: .green, activeRangeColor: .green.opacity(0.5), disabledCellFontColor: .white, activeCellFont: .caption2, disabledCellFont: .caption, activeStrokeColor: .yellow, disabledCellFillColor: .gray, activeCellFontColor: .white, showOverlay: true)
                     .padding()
             }
         }
