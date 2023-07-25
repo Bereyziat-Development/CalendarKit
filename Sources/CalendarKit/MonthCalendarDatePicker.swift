@@ -21,6 +21,10 @@ public struct MonthCalendarDatePicker: View {
     private let disabledCellFillColor: Color
     private let activeCellFontColor: Color
     private let showOverlay: Bool
+    private let monthTitleColor: Color
+    private let monthTitleFontSize: CGFloat
+    private let monthTitleFontWeight: Font.Weight
+    private let chevronSize: CGFloat
     
     // MARK: Constants
     
@@ -43,7 +47,11 @@ public struct MonthCalendarDatePicker: View {
         activeStrokeColor: Color = .orange,
         disabledCellFillColor: Color = .clear,
         activeCellFontColor: Color = .white,
-        showOverlay: Bool = false
+        showOverlay: Bool = false,
+        monthTitleColor: Color = .black,
+        monthTitleFontSize: CGFloat = 24,
+        monthTitleFontWeight: Font.Weight = .bold,
+        chevronSize: CGFloat = 20
     ) {
         _selectedDate = selectedDate
         _displayMonth = State(initialValue: now)
@@ -57,6 +65,10 @@ public struct MonthCalendarDatePicker: View {
         self.disabledCellFillColor = disabledCellFillColor
         self.activeCellFontColor = activeCellFontColor
         self.showOverlay = showOverlay
+        self.monthTitleColor = monthTitleColor
+        self.monthTitleFontSize = monthTitleFontSize
+        self.monthTitleFontWeight = monthTitleFontWeight
+        self.chevronSize = chevronSize
     }
     
     // MARK: initialize with an optional startDate and an optional endDate
@@ -162,7 +174,8 @@ public struct MonthCalendarDatePicker: View {
         HStack {
             Text(DateFormatter.monthYear.string(from: date).capitalized)
                 .padding(.vertical)
-                .font(.headline)
+                .font(.system(size: monthTitleFontSize, weight: monthTitleFontWeight))
+                .foregroundColor(monthTitleColor)
             Spacer()
             Button {
                 withAnimation {
@@ -179,7 +192,7 @@ public struct MonthCalendarDatePicker: View {
             } label: {
                 Label(
                     title: { Text("Previous") },
-                    icon: { Image(systemName: "chevron.left") }
+                    icon: { Image(systemName: "chevron.left").font(.system(size: chevronSize)) }
                 )
                 
                 .labelStyle(IconOnlyLabelStyle())
@@ -200,7 +213,7 @@ public struct MonthCalendarDatePicker: View {
             } label: {
                 Label(
                     title: { Text("Next") },
-                    icon: { Image(systemName: "chevron.right") }
+                    icon: { Image(systemName: "chevron.right").font(.system(size: chevronSize)) }
                 )
                 .labelStyle(IconOnlyLabelStyle())
                 .padding(.horizontal)
