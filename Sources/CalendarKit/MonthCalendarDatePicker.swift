@@ -7,6 +7,13 @@
 
 import SwiftUI
 
+//TODO: Remove dates - days like weekends, do enum for days with int and days
+//TODO: 2: Removed everything except conrete days
+//TODO: 3: Show conrete day
+//TODO: Have to make changes in inits
+//             if isInMonth(date) && dateRange.contains(date) {
+ // is crucial
+
 public struct MonthCalendarDatePicker: View {
     @Binding private var selectedDate: Date
     @State private var displayMonth: Date
@@ -21,6 +28,11 @@ public struct MonthCalendarDatePicker: View {
     private let disabledCellFillColor: Color
     private let activeCellFontColor: Color
     private let showOverlay: Bool
+    private let monthTitleColor: Color
+    private let monthTitleFontSize: CGFloat
+    private let monthTitleFontWeight: Font.Weight
+    private let chevronSize: CGFloat
+    private let isWeekendActive: Bool
     
     // MARK: Constants
     
@@ -31,7 +43,7 @@ public struct MonthCalendarDatePicker: View {
     private let calendar = Calendar(identifier: .gregorian)
     
     // MARK: initialize with a list of date ranges
-    
+    //1
     public init(
         selectedDate: Binding<Date>,
         activeDateRanges: [DateRange],
@@ -43,7 +55,12 @@ public struct MonthCalendarDatePicker: View {
         activeStrokeColor: Color = .orange,
         disabledCellFillColor: Color = .clear,
         activeCellFontColor: Color = .white,
-        showOverlay: Bool = false
+        showOverlay: Bool = false,
+        monthTitleColor: Color = .black,
+        monthTitleFontSize: CGFloat = 24,
+        monthTitleFontWeight: Font.Weight = .bold,
+        chevronSize: CGFloat = 20,
+        isWeekendActive: Bool = true
     ) {
         _selectedDate = selectedDate
         _displayMonth = State(initialValue: now)
@@ -57,10 +74,15 @@ public struct MonthCalendarDatePicker: View {
         self.disabledCellFillColor = disabledCellFillColor
         self.activeCellFontColor = activeCellFontColor
         self.showOverlay = showOverlay
+        self.monthTitleColor = monthTitleColor
+        self.monthTitleFontSize = monthTitleFontSize
+        self.monthTitleFontWeight = monthTitleFontWeight
+        self.chevronSize = chevronSize
+        self.isWeekendActive = isWeekendActive
     }
     
     // MARK: initialize with an optional startDate and an optional endDate
-    
+    //2
     public init(
         selectedDate: Binding<Date>,
         startDate: Date? = nil,
@@ -79,7 +101,7 @@ public struct MonthCalendarDatePicker: View {
     }
     
     // MARK: initialize with one date range
-    
+    //3
     public init(
         selectedDate: Binding<Date>,
         activeDateRange: DateRange,
@@ -105,7 +127,8 @@ public struct MonthCalendarDatePicker: View {
             activeCell: ActiveCell,
             disabledCell: DisabledCell,
             header: Header,
-            title: Title
+            title: Title,
+            weekendsActive: isWeekendActive
         )
         .equatable()
         .onAppear {
@@ -162,7 +185,8 @@ public struct MonthCalendarDatePicker: View {
         HStack {
             Text(DateFormatter.monthYear.string(from: date).capitalized)
                 .padding(.vertical)
-                .font(.headline)
+                .font(.system(size: monthTitleFontSize, weight: monthTitleFontWeight))
+                .foregroundColor(monthTitleColor)
             Spacer()
             Button {
                 withAnimation {
@@ -179,7 +203,7 @@ public struct MonthCalendarDatePicker: View {
             } label: {
                 Label(
                     title: { Text("Previous") },
-                    icon: { Image(systemName: "chevron.left") }
+                    icon: { Image(systemName: "chevron.left").font(.system(size: chevronSize)) }
                 )
                 
                 .labelStyle(IconOnlyLabelStyle())
@@ -200,7 +224,7 @@ public struct MonthCalendarDatePicker: View {
             } label: {
                 Label(
                     title: { Text("Next") },
-                    icon: { Image(systemName: "chevron.right") }
+                    icon: { Image(systemName: "chevron.right").font(.system(size: chevronSize)) }
                 )
                 .labelStyle(IconOnlyLabelStyle())
                 .padding(.horizontal)
@@ -231,13 +255,12 @@ struct CalendarView_Previews: PreviewProvider {
         @State private var selectedDate = Date()
         private let activeDateRange = DateRange(startDate: Date(), endDate: Calendar.current.date(byAdding: .weekOfYear, value: 2, to: Date())!)
         private let now = Date()
-        private let twoWeeksFromNow = Calendar.current.date(byAdding: .weekOfYear, value: 2, to: Date())!
+        private let twoWeeksFromNow = Calendar.current.date(byAdding: .weekOfYear, value: 6, to: Date())!
         
         
         var body: some View {
             NavigationView {
-                MonthCalendarDatePicker(selectedDate: $selectedDate, activeDateRanges: [DateRange(startDate: Date(), endDate: twoWeeksFromNow)], activeCellColor: .green, activeRangeColor: .green.opacity(0.5), disabledCellFontColor: .white, activeCellFont: .caption2, disabledCellFont: .caption, activeStrokeColor: .yellow, disabledCellFillColor: .gray, activeCellFontColor: .white, showOverlay: true)
-                    .padding()
+                MonthCalendarDatePicker(selectedDate: $selectedDate, activeDateRanges: [DateRange(startDate: Date(), endDate: twoWeeksFromNow)], activeCellColor: .green, activeRangeColor: .green.opacity(0.5), disabledCellFontColor: .white, activeCellFont: .caption2, disabledCellFont: .caption, activeStrokeColor: .yellow, disabledCellFillColor: .gray, activeCellFontColor: .white, showOverlay: true, monthTitleFontSize: 20, monthTitleFontWeight: .black, chevronSize: 10, isWeekendActive: false)
             }
         }
     }
