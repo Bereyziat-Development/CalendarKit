@@ -2,6 +2,18 @@ import SwiftUI
 
 /// CalendarLayout allows you to create your own personalized view of calendar.
 /// If  no activeDateRange is provided all dates of the calendar are set as active
+///
+///
+
+enum Weekday: Int, CaseIterable {
+    case monday = 1, tuesday, wednesday, thursday, friday, saturday, sunday
+    
+    var isWeekend: Bool {
+        return self == .saturday || self == .sunday
+    }
+}
+
+
 public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: View>: View {
     @Binding var selectedDate: Date
 
@@ -14,6 +26,7 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
     public let title: (Date) -> Title
     public var startDate: Date?
     public var endDate: Date?
+    public var weekendsActive: Bool?
 
     public init(
         selectedDate: Binding<Date>,
@@ -81,6 +94,33 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
             title: title
         )
     }
+    
+    // New initializer to include weekendsActive parameter
+    public init(
+        selectedDate: Binding<Date>,
+        calendar: Calendar = Calendar(identifier: .gregorian),
+        displayMonth: Date = Date(),
+        activeDateRanges: [DateRange]? = nil,
+        activeCell: @escaping (Date) -> Day,
+        disabledCell: @escaping (Date) -> Trailing,
+        header: @escaping (Date) -> Header,
+        title: @escaping (Date) -> Title,
+        weekendsActive: Bool = true  // New parameter
+    ) {
+        self._selectedDate = selectedDate
+        self.calendar = calendar
+        self.displayMonth = displayMonth
+        self.activeDateRanges = activeDateRanges
+        self.activeCell = activeCell
+        self.disabledCell = disabledCell
+        self.header = header
+        self.title = title
+        self.weekendsActive = weekendsActive
+    }
+
+
+    // Additional initializers will follow a similar pattern with weekendsActive parameter.
+
 
     // Constants
     public let daysInWeek = 7
@@ -125,6 +165,12 @@ public extension CalendarLayout {
 
     private func isActive(_ date: Date) -> Bool {
         guard let activeDateRanges else { return isInMonth(date) }
+        
+        if !weekendsActive! && (calendar.component(.weekday, from: date) == Weekday.saturday.rawValue ||
+                  calendar.component(.weekday, from: date) == Weekday.sunday.rawValue) {
+                   return false
+               }
+        
         for dateRange in activeDateRanges {
             if isInMonth(date) && dateRange.contains(date) {
                 return true
