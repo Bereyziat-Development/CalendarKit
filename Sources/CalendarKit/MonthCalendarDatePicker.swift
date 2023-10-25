@@ -7,12 +7,6 @@
 
 import SwiftUI
 
-//TODO: Remove dates - days like weekends, do enum for days with int and days
-//TODO: 2: Removed everything except conrete days
-//TODO: 3: Show conrete day
-//TODO: Have to make changes in inits
-//             if isInMonth(date) && dateRange.contains(date) {
- // is crucial
 
 public struct MonthCalendarDatePicker: View {
     @Binding private var selectedDate: Date

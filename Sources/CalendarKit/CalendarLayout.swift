@@ -95,7 +95,7 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
         )
     }
     
-    // New initializer to include weekendsActive parameter
+    //MARK: initialize with a weekendsActive parameter
     public init(
         selectedDate: Binding<Date>,
         calendar: Calendar = Calendar(identifier: .gregorian),
@@ -105,7 +105,7 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
         disabledCell: @escaping (Date) -> Trailing,
         header: @escaping (Date) -> Header,
         title: @escaping (Date) -> Title,
-        weekendsActive: Bool = true  // New parameter
+        weekendsActive: Bool = true
     ) {
         self._selectedDate = selectedDate
         self.calendar = calendar
@@ -119,7 +119,6 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
     }
 
 
-    // Additional initializers will follow a similar pattern with weekendsActive parameter.
 
 
     // Constants
@@ -193,8 +192,23 @@ public extension CalendarLayout {
 
         let dateInterval = DateInterval(start: monthFirstWeek.start, end: monthLastWeek.end)
         return calendar.generateDays(for: dateInterval)
+        
     }
 }
+
+//public extension CalendarLayout {
+//    func makeDays() -> [Date] {
+//        guard let monthInterval = calendar.dateInterval(of: .month, for: displayMonth) else {
+//            return []
+//        }
+//
+//        let dateInterval = DateInterval(start: monthInterval.start, end: monthInterval.end.addingTimeInterval(-1))
+//        return calendar.generateDays(for: dateInterval)
+//            .filter { calendar.isDate($0, equalTo: displayMonth, toGranularity: .month) }
+//    }
+//}
+
+
 
 public extension Calendar {
     func generateDates(
