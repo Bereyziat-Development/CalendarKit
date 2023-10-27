@@ -5,9 +5,9 @@ import SwiftUI
 ///
 ///
 
-enum Weekday: Int, CaseIterable {
-    case monday = 1, tuesday, wednesday, thursday, friday, saturday, sunday
-    
+public enum Weekday: Int, CaseIterable {
+    case  sunday = 1, monday, tuesday, wednesday, thursday, friday, saturday
+    static let weekend = [Self.saturday, Self.sunday]
     var isWeekend: Bool {
         return self == .saturday || self == .sunday
     }
@@ -26,7 +26,9 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
     public let title: (Date) -> Title
     public var startDate: Date?
     public var endDate: Date?
-    public var weekendsActive: Bool?
+    public var inactiveDays: [Weekday]
+    //-> isWeekendDisabled
+    public var disabledDates: [Date]
 
     public init(
         selectedDate: Binding<Date>,
@@ -36,7 +38,9 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
         activeCell: @escaping (Date) -> Day,
         disabledCell: @escaping (Date) -> Trailing,
         header: @escaping (Date) -> Header,
-        title: @escaping (Date) -> Title
+        title: @escaping (Date) -> Title,
+        inactiveDays: [Weekday] = [],
+        disabledDates: [Date] = []
     ) {
         self._selectedDate = selectedDate
         self.calendar = calendar
@@ -46,6 +50,8 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
         self.disabledCell = disabledCell
         self.header = header
         self.title = title
+        self.inactiveDays = inactiveDays
+        self.disabledDates = disabledDates
     }
     
     //MARK: initialize with an optional startDate and an optional endDate
@@ -58,7 +64,8 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
         activeCell: @escaping (Date) -> Day,
         disabledCell: @escaping (Date) -> Trailing,
         header: @escaping (Date) -> Header,
-        title: @escaping (Date) -> Title
+        title: @escaping (Date) -> Title,
+        inactiveDays: [Weekday] = []
         ) {
         self.init(
             selectedDate: selectedDate,
@@ -68,7 +75,8 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
             activeCell: activeCell,
             disabledCell: disabledCell,
             header: header,
-            title: title
+            title: title,
+            inactiveDays: inactiveDays
         )
     }
     
@@ -81,7 +89,8 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
         activeCell: @escaping (Date) -> Day,
         disabledCell: @escaping (Date) -> Trailing,
         header: @escaping (Date) -> Header,
-        title: @escaping (Date) -> Title
+        title: @escaping (Date) -> Title,
+        inactiveDays: [Weekday] = []
     ) {
         self.init(
             selectedDate: selectedDate,
@@ -91,9 +100,38 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
             activeCell: activeCell,
             disabledCell: disabledCell,
             header: header,
-            title: title
+            title: title,
+            inactiveDays: inactiveDays
         )
     }
+    
+    //MARK: initialize with a disabledDates
+    init(
+        selectedDate: Binding<Date>,
+        calendar: Calendar = Calendar(identifier: .gregorian),
+        displayMonth: Date = Date(),
+        activeDateRange: DateRange,
+        activeCell: @escaping (Date) -> Day,
+        disabledCell: @escaping (Date) -> Trailing,
+        header: @escaping (Date) -> Header,
+        title: @escaping (Date) -> Title,
+        disabledDates: [Date] = [],
+        inactiveDays: [Weekday] = []
+    ) {
+        
+        self._selectedDate = selectedDate
+        self.calendar = calendar
+        self.displayMonth = displayMonth
+        self.activeDateRanges = [activeDateRange]
+        self.activeCell = activeCell
+        self.disabledCell = disabledCell
+        self.header = header
+        self.title = title
+        self.disabledDates = disabledDates
+        self.inactiveDays = inactiveDays
+        
+    }
+
     
     //MARK: initialize with a weekendsActive parameter
     public init(
@@ -105,7 +143,8 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
         disabledCell: @escaping (Date) -> Trailing,
         header: @escaping (Date) -> Header,
         title: @escaping (Date) -> Title,
-        weekendsActive: Bool = true
+        disabledDates: [Date] = [],
+        isWeekendsActive: Bool = true
     ) {
         self._selectedDate = selectedDate
         self.calendar = calendar
@@ -115,7 +154,8 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
         self.disabledCell = disabledCell
         self.header = header
         self.title = title
-        self.weekendsActive = weekendsActive
+        self.disabledDates = disabledDates
+        self.inactiveDays = isWeekendsActive ? Weekday.weekend : []
     }
 
 
@@ -145,6 +185,9 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
             }
         }
     }
+//    private func isDateDisabled(_ date: Date) -> Bool {
+//         return disabledDates?.contains { Calendar.current.isDate($0, inSameDayAs: date) } ?? false
+//     }
 }
 
 // MARK: - Conformances
@@ -161,15 +204,32 @@ public extension CalendarLayout {
     private func isInMonth(_ date: Date) -> Bool {
         calendar.isDate(date, equalTo: month, toGranularity: .month)
     }
-
+    private func isDateDisabled(_ date: Date) -> Bool {
+         return disabledDates.contains { Calendar.current.isDate($0, inSameDayAs: date) }
+     }
     private func isActive(_ date: Date) -> Bool {
-        guard let activeDateRanges else { return isInMonth(date) }
+        guard let activeDateRanges = activeDateRanges else { return isInMonth(date) }
+
+        // Check if the date is in disabledDates
+        if disabledDates.contains(where: { Calendar.current.isDate($0, inSameDayAs: date) }) {
+            return false
+        }
+
+        // Check if weekends are active and if the date is a weekend
+        let currentDay = Weekday(rawValue:  Calendar.current.component(.weekday, from: date))
+//        print("Day: \(Calendar.current.component(.weekday, from: date))")
+//        print(currentDay)
+        print("Date \(date)")
+        print("current Day \(currentDay)")
+        print(Calendar.current.component(.weekday, from: date))
         
-        if !weekendsActive! && (calendar.component(.weekday, from: date) == Weekday.saturday.rawValue ||
-                  calendar.component(.weekday, from: date) == Weekday.sunday.rawValue) {
-                   return false
-               }
-        
+//        print(Weekday.tuesday.rawValue)
+        if let currentDay, inactiveDays.contains(currentDay) {
+            
+                return false
+            
+        }
+
         for dateRange in activeDateRanges {
             if isInMonth(date) && dateRange.contains(date) {
                 return true
@@ -177,6 +237,8 @@ public extension CalendarLayout {
         }
         return false
     }
+
+
 }
 
 // MARK: - Helpers
@@ -195,18 +257,6 @@ public extension CalendarLayout {
         
     }
 }
-
-//public extension CalendarLayout {
-//    func makeDays() -> [Date] {
-//        guard let monthInterval = calendar.dateInterval(of: .month, for: displayMonth) else {
-//            return []
-//        }
-//
-//        let dateInterval = DateInterval(start: monthInterval.start, end: monthInterval.end.addingTimeInterval(-1))
-//        return calendar.generateDays(for: dateInterval)
-//            .filter { calendar.isDate($0, equalTo: displayMonth, toGranularity: .month) }
-//    }
-//}
 
 
 

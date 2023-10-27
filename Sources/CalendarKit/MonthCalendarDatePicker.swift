@@ -26,7 +26,9 @@ public struct MonthCalendarDatePicker: View {
     private let monthTitleFontSize: CGFloat
     private let monthTitleFontWeight: Font.Weight
     private let chevronSize: CGFloat
-    private let isWeekendActive: Bool
+    private let inactiveDays: [Weekday]
+    private let disabledDates: [Date]
+    
     
     // MARK: Constants
     
@@ -54,7 +56,8 @@ public struct MonthCalendarDatePicker: View {
         monthTitleFontSize: CGFloat = 24,
         monthTitleFontWeight: Font.Weight = .bold,
         chevronSize: CGFloat = 20,
-        isWeekendActive: Bool = true
+        inactiveDays: [Weekday] = [],
+        disabledDates: [Date] = []
     ) {
         _selectedDate = selectedDate
         _displayMonth = State(initialValue: now)
@@ -72,7 +75,8 @@ public struct MonthCalendarDatePicker: View {
         self.monthTitleFontSize = monthTitleFontSize
         self.monthTitleFontWeight = monthTitleFontWeight
         self.chevronSize = chevronSize
-        self.isWeekendActive = isWeekendActive
+        self.inactiveDays = inactiveDays
+        self.disabledDates = disabledDates
     }
     
     // MARK: initialize with an optional startDate and an optional endDate
@@ -122,7 +126,8 @@ public struct MonthCalendarDatePicker: View {
             disabledCell: DisabledCell,
             header: Header,
             title: Title,
-            weekendsActive: isWeekendActive
+            inactiveDays: inactiveDays,
+            disabledDates: disabledDates
         )
         .equatable()
         .onAppear {
@@ -247,14 +252,20 @@ public struct MonthCalendarDatePicker: View {
 struct CalendarView_Previews: PreviewProvider {
     struct ExampleView: View {
         @State private var selectedDate = Date()
-        private let activeDateRange = DateRange(startDate: Date(), endDate: Calendar.current.date(byAdding: .weekOfYear, value: 2, to: Date())!)
-        private let now = Date()
-        private let twoWeeksFromNow = Calendar.current.date(byAdding: .weekOfYear, value: 6, to: Date())!
+        private let activeDateRange = DateRange(startDate: Calendar.current.date(byAdding: .weekOfYear, value: 6, to: Date())!, endDate: Calendar.current.date(byAdding: .weekOfYear, value: 12, to: Date())!)
+        private let startDate = Date()
+        private let endDate = Date(year: 2027, month: 7, day: 12)
+        private let disabledDates = [
+          Date(year: 2023, month: 11, day: 11)
+           ]
+        //provide the list of active dates, we dont pass disabled dates, disabled days and active date ranges. 
         
         
         var body: some View {
             NavigationView {
-                MonthCalendarDatePicker(selectedDate: $selectedDate, activeDateRanges: [DateRange(startDate: Date(), endDate: twoWeeksFromNow)], activeCellColor: .green, activeRangeColor: .green.opacity(0.5), disabledCellFontColor: .white, activeCellFont: .caption2, disabledCellFont: .caption, activeStrokeColor: .yellow, disabledCellFillColor: .gray, activeCellFontColor: .white, showOverlay: true, monthTitleFontSize: 20, monthTitleFontWeight: .black, chevronSize: 10, isWeekendActive: false)
+                MonthCalendarDatePicker(selectedDate: $selectedDate, activeDateRanges: [DateRange(startDate: startDate, endDate: endDate)], activeCellColor: .green, activeRangeColor: .green.opacity(0.5), disabledCellFontColor: .white, activeCellFont: .caption2, disabledCellFont: .caption, activeStrokeColor: .yellow, disabledCellFillColor: .gray, activeCellFontColor: .white, showOverlay: true, monthTitleFontSize: 20, monthTitleFontWeight: .black, chevronSize: 10, inactiveDays: [.tuesday], disabledDates: disabledDates)
+                
+
             }
         }
     }
