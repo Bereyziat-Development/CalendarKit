@@ -27,7 +27,6 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
     public var startDate: Date?
     public var endDate: Date?
     public var inactiveDays: [Weekday]
-    //-> isWeekendDisabled
     public var disabledDates: [Date]
 
     public init(
@@ -185,9 +184,6 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
             }
         }
     }
-//    private func isDateDisabled(_ date: Date) -> Bool {
-//         return disabledDates?.contains { Calendar.current.isDate($0, inSameDayAs: date) } ?? false
-//     }
 }
 
 // MARK: - Conformances
@@ -215,19 +211,10 @@ public extension CalendarLayout {
             return false
         }
 
-        // Check if weekends are active and if the date is a weekend
+        // Check if Weekdays are active and if the date is a weekend
         let currentDay = Weekday(rawValue:  Calendar.current.component(.weekday, from: date))
-//        print("Day: \(Calendar.current.component(.weekday, from: date))")
-//        print(currentDay)
-        print("Date \(date)")
-        print("current Day \(currentDay)")
-        print(Calendar.current.component(.weekday, from: date))
-        
-//        print(Weekday.tuesday.rawValue)
         if let currentDay, inactiveDays.contains(currentDay) {
-            
                 return false
-            
         }
 
         for dateRange in activeDateRanges {

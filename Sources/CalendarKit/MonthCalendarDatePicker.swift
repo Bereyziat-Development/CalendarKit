@@ -258,7 +258,6 @@ struct CalendarView_Previews: PreviewProvider {
         private let disabledDates = [
           Date(year: 2023, month: 11, day: 11)
            ]
-        //provide the list of active dates, we dont pass disabled dates, disabled days and active date ranges. 
         
         
         var body: some View {
