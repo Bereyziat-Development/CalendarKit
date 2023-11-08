@@ -6,13 +6,12 @@ import SwiftUI
 ///
 
 public enum Weekday: Int, CaseIterable {
-    case  sunday = 1, monday, tuesday, wednesday, thursday, friday, saturday
+    case sunday = 1, monday, tuesday, wednesday, thursday, friday, saturday
     static let weekend = [Self.saturday, Self.sunday]
     var isWeekend: Bool {
         return self == .saturday || self == .sunday
     }
 }
-
 
 public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: View>: View {
     @Binding var selectedDate: Date
@@ -52,8 +51,9 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
         self.inactiveDays = inactiveDays
         self.disabledDates = disabledDates
     }
-    
-    //MARK: initialize with an optional startDate and an optional endDate
+
+    // MARK: 1) initialize with an optional startDate and an optional endDate
+
     init(
         selectedDate: Binding<Date>,
         calendar: Calendar = Calendar(identifier: .gregorian),
@@ -65,7 +65,7 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
         header: @escaping (Date) -> Header,
         title: @escaping (Date) -> Title,
         inactiveDays: [Weekday] = []
-        ) {
+    ) {
         self.init(
             selectedDate: selectedDate,
             calendar: calendar,
@@ -78,8 +78,9 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
             inactiveDays: inactiveDays
         )
     }
-    
-    //MARK: initialize with a single date range
+
+    // MARK: 2) initialize with a single date range
+
     init(
         selectedDate: Binding<Date>,
         calendar: Calendar = Calendar(identifier: .gregorian),
@@ -103,8 +104,9 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
             inactiveDays: inactiveDays
         )
     }
-    
-    //MARK: initialize with a disabledDates
+
+    // MARK: 3) initialize with a disabledDates
+
     init(
         selectedDate: Binding<Date>,
         calendar: Calendar = Calendar(identifier: .gregorian),
@@ -117,7 +119,6 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
         disabledDates: [Date] = [],
         inactiveDays: [Weekday] = []
     ) {
-        
         self._selectedDate = selectedDate
         self.calendar = calendar
         self.displayMonth = displayMonth
@@ -128,11 +129,10 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
         self.title = title
         self.disabledDates = disabledDates
         self.inactiveDays = inactiveDays
-        
     }
 
-    
-    //MARK: initialize with a weekendsActive parameter
+    // MARK: 4) initialize with a weekendsActive parameter
+
     public init(
         selectedDate: Binding<Date>,
         calendar: Calendar = Calendar(identifier: .gregorian),
@@ -156,9 +156,6 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
         self.disabledDates = disabledDates
         self.inactiveDays = isWeekendsActive ? Weekday.weekend : []
     }
-
-
-
 
     // Constants
     public let daysInWeek = 7
@@ -200,9 +197,11 @@ public extension CalendarLayout {
     private func isInMonth(_ date: Date) -> Bool {
         calendar.isDate(date, equalTo: month, toGranularity: .month)
     }
+
     private func isDateDisabled(_ date: Date) -> Bool {
-         return disabledDates.contains { Calendar.current.isDate($0, inSameDayAs: date) }
-     }
+        return disabledDates.contains { Calendar.current.isDate($0, inSameDayAs: date) }
+    }
+
     private func isActive(_ date: Date) -> Bool {
         guard let activeDateRanges = activeDateRanges else { return isInMonth(date) }
 
@@ -212,9 +211,9 @@ public extension CalendarLayout {
         }
 
         // Check if Weekdays are active and if the date is a weekend
-        let currentDay = Weekday(rawValue:  Calendar.current.component(.weekday, from: date))
+        let currentDay = Weekday(rawValue: Calendar.current.component(.weekday, from: date))
         if let currentDay, inactiveDays.contains(currentDay) {
-                return false
+            return false
         }
 
         for dateRange in activeDateRanges {
@@ -224,8 +223,6 @@ public extension CalendarLayout {
         }
         return false
     }
-
-
 }
 
 // MARK: - Helpers
@@ -241,11 +238,8 @@ public extension CalendarLayout {
 
         let dateInterval = DateInterval(start: monthFirstWeek.start, end: monthLastWeek.end)
         return calendar.generateDays(for: dateInterval)
-        
     }
 }
-
-
 
 public extension Calendar {
     func generateDates(

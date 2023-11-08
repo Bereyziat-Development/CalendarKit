@@ -2,8 +2,8 @@ import Foundation
 
 public struct DateRange {
     // A date range without a startDate and/or and endDate correspond to an open interval
-    public var startDate: Date? = nil
-    public var endDate: Date? = nil
+    public var startDate: Date?
+    public var endDate: Date?
     
     public init(startDate: Date? = nil, endDate: Date? = nil) {
         self.startDate = startDate
@@ -32,11 +32,10 @@ public struct DateRange {
     }
 }
 
-public struct Constant {
-    public struct Time {
+public enum Constant {
+    public enum Time {
         public static let _2DaysInSeconds: Double = 172_800
         public static let _2MonthInSeconds: Double = 5_260_000
         public static let calendar = Calendar(identifier: .gregorian)
     }
 }
-

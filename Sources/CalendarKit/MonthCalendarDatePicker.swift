@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-
 public struct MonthCalendarDatePicker: View {
     @Binding private var selectedDate: Date
     @State private var displayMonth: Date
@@ -29,17 +28,16 @@ public struct MonthCalendarDatePicker: View {
     private let inactiveDays: [Weekday]
     private let disabledDates: [Date]
     
-    
     // MARK: Constants
     
-    /// WARNING: The variable now is initialized upon creation of the DisposalCalendar
-    /// If the CalendarDisposal View will stay displayed for too long at midnight there maybe an error
-    /// in the now date (it will display yesterday)
+    /// WARNING: The variable now is initialized upon creation of the MonthCalendarDatePicker
+    /// If the MonthCalendarDatePicker would stay displayed for too long passed midnight there maybe an error
+    /// in the now date (it would display yesterday)
     private let now = Date()
     private let calendar = Calendar(identifier: .gregorian)
     
-    // MARK: initialize with a list of date ranges
-    //1
+    // MARK: 1) initialize with a list of date ranges
+
     public init(
         selectedDate: Binding<Date>,
         activeDateRanges: [DateRange],
@@ -79,8 +77,8 @@ public struct MonthCalendarDatePicker: View {
         self.disabledDates = disabledDates
     }
     
-    // MARK: initialize with an optional startDate and an optional endDate
-    //2
+    // MARK: 2) initialize with an optional startDate and an optional endDate
+
     public init(
         selectedDate: Binding<Date>,
         startDate: Date? = nil,
@@ -98,8 +96,8 @@ public struct MonthCalendarDatePicker: View {
         )
     }
     
-    // MARK: initialize with one date range
-    //3
+    // MARK: 3) initialize with one date range
+
     public init(
         selectedDate: Binding<Date>,
         activeDateRange: DateRange,
@@ -133,38 +131,36 @@ public struct MonthCalendarDatePicker: View {
         .onAppear {
             displayMonth = $selectedDate.wrappedValue
         }
-        
     }
     
     @ViewBuilder
     private func ActiveCell(date: Date) -> some View {
-            let isDateSelected = calendar.isDate(date, inSameDayAs: selectedDate)
-            let isActiveCell = calendar.isDate(date, inSameDayAs: now)
-            let isActiveRange = activeDateRanges?.contains { $0.contains(date) } ?? false
-            let activeCellFillColor = isDateSelected ? activeCellColor : isActiveRange ? activeRangeColor ?? activeCellColor.opacity(0.5) : activeCellColor.opacity(0.5)
-            let activeCellStrokeColor = activeCellColor
+        let isDateSelected = calendar.isDate(date, inSameDayAs: selectedDate)
+        let isActiveCell = calendar.isDate(date, inSameDayAs: now)
+        let isActiveRange = activeDateRanges?.contains { $0.contains(date) } ?? false
+        let activeCellFillColor = isDateSelected ? activeCellColor : isActiveRange ? activeRangeColor ?? activeCellColor.opacity(0.5) : activeCellColor.opacity(0.5)
+        let activeCellStrokeColor = activeCellColor
             
-            Button {
-                selectedDate = date
-            } label: {
-                ZStack {
+        Button {
+            selectedDate = date
+        } label: {
+            ZStack {
+                Circle()
+                    .fill(activeCellFillColor)
+                    .frame(width: 40, height: 40)
+                    
+                if showOverlay && (isActiveCell || isDateSelected) {
                     Circle()
-                        .fill(activeCellFillColor)
-                        .frame(width: 40, height: 40)
-                    
-                    if showOverlay && (isActiveCell || isDateSelected) {
-                        Circle()
-                            .stroke(activeCellStrokeColor, lineWidth: 2)
-                    }
-                    
-                    Text(DateFormatter.dayFormatter.string(from: date))
-                        .font(activeCellFont)
-                        .foregroundColor(activeCellFontColor)
+                        .stroke(activeCellStrokeColor, lineWidth: 2)
                 }
+                    
+                Text(DateFormatter.dayFormatter.string(from: date))
+                    .font(activeCellFont)
+                    .foregroundColor(activeCellFontColor)
             }
-            .buttonStyle(.plain)
         }
-    
+        .buttonStyle(.plain)
+    }
     
     @ViewBuilder
     private func DisabledCell(date: Date) -> some View {
@@ -245,7 +241,6 @@ public struct MonthCalendarDatePicker: View {
     }
 }
 
-
 // MARK: - Previews
 
 #if DEBUG
@@ -256,15 +251,29 @@ struct CalendarView_Previews: PreviewProvider {
         private let startDate = Date()
         private let endDate = Date(year: 2027, month: 7, day: 12)
         private let disabledDates = [
-          Date(year: 2023, month: 11, day: 11)
-           ]
-        
+            Date(year: 2023, month: 11, day: 11)
+        ]
         
         var body: some View {
             NavigationView {
-                MonthCalendarDatePicker(selectedDate: $selectedDate, activeDateRanges: [DateRange(startDate: startDate, endDate: endDate)], activeCellColor: .green, activeRangeColor: .green.opacity(0.5), disabledCellFontColor: .white, activeCellFont: .caption2, disabledCellFont: .caption, activeStrokeColor: .yellow, disabledCellFillColor: .gray, activeCellFontColor: .white, showOverlay: true, monthTitleFontSize: 20, monthTitleFontWeight: .black, chevronSize: 10, inactiveDays: [.tuesday], disabledDates: disabledDates)
-                
-
+                MonthCalendarDatePicker(
+                    selectedDate: $selectedDate,
+                    activeDateRanges: [DateRange(startDate: startDate, endDate: endDate)],
+                    activeCellColor: .green,
+                    activeRangeColor: .green.opacity(0.5),
+                    disabledCellFontColor: .white,
+                    activeCellFont: .caption2,
+                    disabledCellFont: .caption,
+                    activeStrokeColor: .yellow,
+                    disabledCellFillColor: .gray,
+                    activeCellFontColor: .white,
+                    showOverlay: true,
+                    monthTitleFontSize: 20,
+                    monthTitleFontWeight: .black,
+                    chevronSize: 10,
+                    inactiveDays: [.tuesday],
+                    disabledDates: disabledDates
+                )
             }
         }
     }
