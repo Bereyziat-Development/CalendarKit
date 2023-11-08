@@ -5,14 +5,13 @@ import SwiftUI
 ///
 ///
 
-enum Weekday: Int, CaseIterable {
-    case monday = 1, tuesday, wednesday, thursday, friday, saturday, sunday
-    
+public enum Weekday: Int, CaseIterable {
+    case sunday = 1, monday, tuesday, wednesday, thursday, friday, saturday
+    static let weekend = [Self.saturday, Self.sunday]
     var isWeekend: Bool {
         return self == .saturday || self == .sunday
     }
 }
-
 
 public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: View>: View {
     @Binding var selectedDate: Date
@@ -26,76 +25,9 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
     public let title: (Date) -> Title
     public var startDate: Date?
     public var endDate: Date?
-    public var weekendsActive: Bool?
+    public var inactiveDays: [Weekday]
+    public var disabledDates: [Date]
 
-    public init(
-        selectedDate: Binding<Date>,
-        calendar: Calendar = Calendar(identifier: .gregorian),
-        displayMonth: Date = Date(),
-        activeDateRanges: [DateRange]? = nil,
-        activeCell: @escaping (Date) -> Day,
-        disabledCell: @escaping (Date) -> Trailing,
-        header: @escaping (Date) -> Header,
-        title: @escaping (Date) -> Title
-    ) {
-        self._selectedDate = selectedDate
-        self.calendar = calendar
-        self.displayMonth = displayMonth
-        self.activeDateRanges = activeDateRanges
-        self.activeCell = activeCell
-        self.disabledCell = disabledCell
-        self.header = header
-        self.title = title
-    }
-    
-    //MARK: initialize with an optional startDate and an optional endDate
-    init(
-        selectedDate: Binding<Date>,
-        calendar: Calendar = Calendar(identifier: .gregorian),
-        displayMonth: Date = Date(),
-        startDate: Date? = nil,
-        endDate: Date? = nil,
-        activeCell: @escaping (Date) -> Day,
-        disabledCell: @escaping (Date) -> Trailing,
-        header: @escaping (Date) -> Header,
-        title: @escaping (Date) -> Title
-        ) {
-        self.init(
-            selectedDate: selectedDate,
-            calendar: calendar,
-            displayMonth: displayMonth,
-            activeDateRange: DateRange(startDate: startDate, endDate: endDate),
-            activeCell: activeCell,
-            disabledCell: disabledCell,
-            header: header,
-            title: title
-        )
-    }
-    
-    //MARK: initialize with a single date range
-    init(
-        selectedDate: Binding<Date>,
-        calendar: Calendar = Calendar(identifier: .gregorian),
-        displayMonth: Date = Date(),
-        activeDateRange: DateRange,
-        activeCell: @escaping (Date) -> Day,
-        disabledCell: @escaping (Date) -> Trailing,
-        header: @escaping (Date) -> Header,
-        title: @escaping (Date) -> Title
-    ) {
-        self.init(
-            selectedDate: selectedDate,
-            calendar: calendar,
-            displayMonth: displayMonth,
-            activeDateRanges: [activeDateRange],
-            activeCell: activeCell,
-            disabledCell: disabledCell,
-            header: header,
-            title: title
-        )
-    }
-    
-    // New initializer to include weekendsActive parameter
     public init(
         selectedDate: Binding<Date>,
         calendar: Calendar = Calendar(identifier: .gregorian),
@@ -105,7 +37,8 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
         disabledCell: @escaping (Date) -> Trailing,
         header: @escaping (Date) -> Header,
         title: @escaping (Date) -> Title,
-        weekendsActive: Bool = true  // New parameter
+        inactiveDays: [Weekday] = [],
+        disabledDates: [Date] = []
     ) {
         self._selectedDate = selectedDate
         self.calendar = calendar
@@ -115,12 +48,114 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
         self.disabledCell = disabledCell
         self.header = header
         self.title = title
-        self.weekendsActive = weekendsActive
+        self.inactiveDays = inactiveDays
+        self.disabledDates = disabledDates
     }
 
+    // MARK: 1) initialize with an optional startDate and an optional endDate
 
-    // Additional initializers will follow a similar pattern with weekendsActive parameter.
+    init(
+        selectedDate: Binding<Date>,
+        calendar: Calendar = Calendar(identifier: .gregorian),
+        displayMonth: Date = Date(),
+        startDate: Date? = nil,
+        endDate: Date? = nil,
+        activeCell: @escaping (Date) -> Day,
+        disabledCell: @escaping (Date) -> Trailing,
+        header: @escaping (Date) -> Header,
+        title: @escaping (Date) -> Title,
+        inactiveDays: [Weekday] = []
+    ) {
+        self.init(
+            selectedDate: selectedDate,
+            calendar: calendar,
+            displayMonth: displayMonth,
+            activeDateRange: DateRange(startDate: startDate, endDate: endDate),
+            activeCell: activeCell,
+            disabledCell: disabledCell,
+            header: header,
+            title: title,
+            inactiveDays: inactiveDays
+        )
+    }
 
+    // MARK: 2) initialize with a single date range
+
+    init(
+        selectedDate: Binding<Date>,
+        calendar: Calendar = Calendar(identifier: .gregorian),
+        displayMonth: Date = Date(),
+        activeDateRange: DateRange,
+        activeCell: @escaping (Date) -> Day,
+        disabledCell: @escaping (Date) -> Trailing,
+        header: @escaping (Date) -> Header,
+        title: @escaping (Date) -> Title,
+        inactiveDays: [Weekday] = []
+    ) {
+        self.init(
+            selectedDate: selectedDate,
+            calendar: calendar,
+            displayMonth: displayMonth,
+            activeDateRanges: [activeDateRange],
+            activeCell: activeCell,
+            disabledCell: disabledCell,
+            header: header,
+            title: title,
+            inactiveDays: inactiveDays
+        )
+    }
+
+    // MARK: 3) initialize with a disabledDates
+
+    init(
+        selectedDate: Binding<Date>,
+        calendar: Calendar = Calendar(identifier: .gregorian),
+        displayMonth: Date = Date(),
+        activeDateRange: DateRange,
+        activeCell: @escaping (Date) -> Day,
+        disabledCell: @escaping (Date) -> Trailing,
+        header: @escaping (Date) -> Header,
+        title: @escaping (Date) -> Title,
+        disabledDates: [Date] = [],
+        inactiveDays: [Weekday] = []
+    ) {
+        self._selectedDate = selectedDate
+        self.calendar = calendar
+        self.displayMonth = displayMonth
+        self.activeDateRanges = [activeDateRange]
+        self.activeCell = activeCell
+        self.disabledCell = disabledCell
+        self.header = header
+        self.title = title
+        self.disabledDates = disabledDates
+        self.inactiveDays = inactiveDays
+    }
+
+    // MARK: 4) initialize with a weekendsActive parameter
+
+    public init(
+        selectedDate: Binding<Date>,
+        calendar: Calendar = Calendar(identifier: .gregorian),
+        displayMonth: Date = Date(),
+        activeDateRanges: [DateRange]? = nil,
+        activeCell: @escaping (Date) -> Day,
+        disabledCell: @escaping (Date) -> Trailing,
+        header: @escaping (Date) -> Header,
+        title: @escaping (Date) -> Title,
+        disabledDates: [Date] = [],
+        isWeekendsActive: Bool = true
+    ) {
+        self._selectedDate = selectedDate
+        self.calendar = calendar
+        self.displayMonth = displayMonth
+        self.activeDateRanges = activeDateRanges
+        self.activeCell = activeCell
+        self.disabledCell = disabledCell
+        self.header = header
+        self.title = title
+        self.disabledDates = disabledDates
+        self.inactiveDays = isWeekendsActive ? Weekday.weekend : []
+    }
 
     // Constants
     public let daysInWeek = 7
@@ -163,14 +198,24 @@ public extension CalendarLayout {
         calendar.isDate(date, equalTo: month, toGranularity: .month)
     }
 
+    private func isDateDisabled(_ date: Date) -> Bool {
+        return disabledDates.contains { Calendar.current.isDate($0, inSameDayAs: date) }
+    }
+
     private func isActive(_ date: Date) -> Bool {
-        guard let activeDateRanges else { return isInMonth(date) }
-        
-        if !weekendsActive! && (calendar.component(.weekday, from: date) == Weekday.saturday.rawValue ||
-                  calendar.component(.weekday, from: date) == Weekday.sunday.rawValue) {
-                   return false
-               }
-        
+        guard let activeDateRanges = activeDateRanges else { return isInMonth(date) }
+
+        // Check if the date is in disabledDates
+        if disabledDates.contains(where: { Calendar.current.isDate($0, inSameDayAs: date) }) {
+            return false
+        }
+
+        // Check if Weekdays are active and if the date is a weekend
+        let currentDay = Weekday(rawValue: Calendar.current.component(.weekday, from: date))
+        if let currentDay, inactiveDays.contains(currentDay) {
+            return false
+        }
+
         for dateRange in activeDateRanges {
             if isInMonth(date) && dateRange.contains(date) {
                 return true
