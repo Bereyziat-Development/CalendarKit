@@ -22,9 +22,8 @@ public struct MonthCalendarDatePicker: View {
     private let disabledCellFillColor: Color
     private let activeCellFontColor: Color
     private let showOverlay: Bool
-    private let monthTitleColor: Color
-    private let monthTitleFontSize: CGFloat
-    private let monthTitleFontWeight: Font.Weight
+    private let daysColor: Color
+    private let daysFont: Font
     private let chevronSize: CGFloat
     private let chevronColor: Color
     private let calendarHeaderColor: Color
@@ -55,9 +54,8 @@ public struct MonthCalendarDatePicker: View {
         disabledCellFillColor: Color = .clear,
         activeCellFontColor: Color = .white,
         showOverlay: Bool = false,
-        monthTitleColor: Color = .black,
-        monthTitleFontSize: CGFloat = 24,
-        monthTitleFontWeight: Font.Weight = .bold,
+        daysColor: Color = .black,
+        daysFont: Font = .caption,
         chevronSize: CGFloat = 20,
         chevronColor: Color  = .gray,
         calendarHeaderColor: Color = .black,
@@ -77,9 +75,8 @@ public struct MonthCalendarDatePicker: View {
         self.disabledCellFillColor = disabledCellFillColor
         self.activeCellFontColor = activeCellFontColor
         self.showOverlay = showOverlay
-        self.monthTitleColor = monthTitleColor
-        self.monthTitleFontSize = monthTitleFontSize
-        self.monthTitleFontWeight = monthTitleFontWeight
+        self.daysColor = daysColor
+        self.daysFont = daysFont
         self.chevronSize = chevronSize
         self.chevronColor = chevronColor
         self.calendarHeaderColor = calendarHeaderColor
@@ -193,8 +190,8 @@ public struct MonthCalendarDatePicker: View {
         HStack {
             Text(DateFormatter.monthYear.string(from: date).capitalized)
                 .padding(.vertical)
-                .font(.system(size: monthTitleFontSize, weight: monthTitleFontWeight))
-                .foregroundColor(monthTitleColor)
+                .font(daysFont)
+                .foregroundColor(daysColor)
             Spacer()
             Button {
                 withAnimation {
@@ -274,7 +271,7 @@ struct CalendarView_Previews: PreviewProvider {
         
         var body: some View {
             NavigationView {
-                MonthCalendarDatePicker(selectedDate: $selectedDate, activeDateRanges: [DateRange(startDate: startDate, endDate: endDate)], activeCellColor: .green, activeRangeColor: .green.opacity(0.5), disabledCellFontColor: .white, activeCellFont: .caption2, disabledCellFont: .caption, activeStrokeColor: .yellow, disabledCellFillColor: .gray, activeCellFontColor: .white, showOverlay: true, monthTitleFontSize: 20, monthTitleFontWeight: .black, chevronSize: 10, chevronColor: .blue, inactiveDays: [.tuesday], disabledDates: disabledDates)
+                MonthCalendarDatePicker(selectedDate: $selectedDate, activeDateRanges: [DateRange(startDate: startDate, endDate: endDate)], activeCellColor: .green, activeRangeColor: .green.opacity(0.5), disabledCellFontColor: .white, activeCellFont: .caption2, disabledCellFont: .caption, activeStrokeColor: .yellow, disabledCellFillColor: .gray, activeCellFontColor: .white, showOverlay: true, daysColor: .black, daysFont: .caption, chevronSize: 10, chevronColor: .blue, inactiveDays: [.tuesday], disabledDates: disabledDates)
                 
 
             }
