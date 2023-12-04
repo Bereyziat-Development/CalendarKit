@@ -22,12 +22,12 @@ public struct MonthCalendarDatePicker: View {
     private let disabledCellFillColor: Color
     private let activeCellFontColor: Color
     private let showOverlay: Bool
-    private let daysColor: Color
-    private let daysFont: Font
+    private let headerColor: Color
+    private let headerFont: Font
     private let chevronSize: CGFloat
     private let chevronColor: Color
-    private let calendarHeaderColor: Color
-    private let headerFont: Font
+    private let daysColor: Color
+    private let daysFont: Font
     private let inactiveDays: [Weekday]
     private let disabledDates: [Date]
     
@@ -54,12 +54,12 @@ public struct MonthCalendarDatePicker: View {
         disabledCellFillColor: Color = .clear,
         activeCellFontColor: Color = .white,
         showOverlay: Bool = false,
-        daysColor: Color = .black,
-        daysFont: Font = .caption,
+        headerColor: Color = .black,
+        headerFont: Font = .caption,
         chevronSize: CGFloat = 20,
         chevronColor: Color  = .gray,
-        calendarHeaderColor: Color = .black,
-        headerFont: Font = .caption,
+        daysColor: Color = .black,
+        daysFont: Font = .caption,
         inactiveDays: [Weekday] = [],
         disabledDates: [Date] = []
     ) {
@@ -75,12 +75,12 @@ public struct MonthCalendarDatePicker: View {
         self.disabledCellFillColor = disabledCellFillColor
         self.activeCellFontColor = activeCellFontColor
         self.showOverlay = showOverlay
-        self.daysColor = daysColor
-        self.daysFont = daysFont
+        self.headerColor = headerColor
+        self.headerFont = headerFont
         self.chevronSize = chevronSize
         self.chevronColor = chevronColor
-        self.calendarHeaderColor = calendarHeaderColor
-        self.headerFont = headerFont
+        self.daysColor = daysColor
+        self.daysFont = daysFont
         self.inactiveDays = inactiveDays
         self.disabledDates = disabledDates
     }
@@ -190,8 +190,8 @@ public struct MonthCalendarDatePicker: View {
         HStack {
             Text(DateFormatter.monthYear.string(from: date).capitalized)
                 .padding(.vertical)
-                .font(daysFont)
-                .foregroundColor(daysColor)
+                .font(headerFont)
+                .foregroundColor(headerColor)
             Spacer()
             Button {
                 withAnimation {
@@ -249,8 +249,8 @@ public struct MonthCalendarDatePicker: View {
             
              
         )
-        .font(headerFont)
-        .foregroundColor(calendarHeaderColor)
+        .font(daysFont)
+        .foregroundColor(daysColor)
     }
 }
 
@@ -271,7 +271,7 @@ struct CalendarView_Previews: PreviewProvider {
         
         var body: some View {
             NavigationView {
-                MonthCalendarDatePicker(selectedDate: $selectedDate, activeDateRanges: [DateRange(startDate: startDate, endDate: endDate)], activeCellColor: .green, activeRangeColor: .green.opacity(0.5), disabledCellFontColor: .white, activeCellFont: .caption2, disabledCellFont: .caption, activeStrokeColor: .yellow, disabledCellFillColor: .gray, activeCellFontColor: .white, showOverlay: true, daysColor: .black, daysFont: .caption, chevronSize: 10, chevronColor: .blue, inactiveDays: [.tuesday], disabledDates: disabledDates)
+                MonthCalendarDatePicker(selectedDate: $selectedDate, activeDateRanges: [DateRange(startDate: startDate, endDate: endDate)], activeCellColor: .green, activeRangeColor: .green.opacity(0.5), disabledCellFontColor: .white, activeCellFont: .caption2, disabledCellFont: .caption, activeStrokeColor: .yellow, disabledCellFillColor: .gray, activeCellFontColor: .white, showOverlay: true, headerFont: .title, chevronSize: 10, chevronColor: .blue, daysColor: .black, inactiveDays: [.tuesday], disabledDates: disabledDates)
                 
 
             }
