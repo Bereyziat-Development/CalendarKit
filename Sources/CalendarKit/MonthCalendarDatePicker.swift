@@ -7,11 +7,11 @@
 
 import SwiftUI
 
-
 public struct MonthCalendarDatePicker: View {
     @Binding private var selectedDate: Date
     @State private var displayMonth: Date
-    
+    @State private var rangeSelection: (startDate: Date?, endDate: Date?)
+
     private let activeDateRanges: [DateRange]?
     private let activeCellColor: Color
     private let activeRangeColor: Color?
@@ -30,16 +30,16 @@ public struct MonthCalendarDatePicker: View {
     private let daysFont: Font
     private let inactiveDays: [Weekday]
     private let disabledDates: [Date]
-    
-    
+    private let selectedDateRange: [DateRange]?
+
     // MARK: Constants
-    
+
     /// WARNING: The variable now is initialized upon creation of the DisposalCalendar
     /// If the CalendarDisposal View will stay displayed for too long at midnight there maybe an error
     /// in the now date (it will display yesterday)
     private let now = Date()
     private let calendar = Calendar(identifier: .gregorian)
-    
+
     // MARK: initialize with a list of date ranges
     //1
     public init(
@@ -83,8 +83,9 @@ public struct MonthCalendarDatePicker: View {
         self.daysFont = daysFont
         self.inactiveDays = inactiveDays
         self.disabledDates = disabledDates
+        self.selectedDateRange = nil
     }
-    
+
     // MARK: initialize with an optional startDate and an optional endDate
     //2
     public init(
@@ -103,7 +104,7 @@ public struct MonthCalendarDatePicker: View {
             disabledCellFont: disabledCellFont
         )
     }
-    
+
     // MARK: initialize with one date range
     //3
     public init(
@@ -121,7 +122,39 @@ public struct MonthCalendarDatePicker: View {
             disabledCellFont: disabledCellFont
         )
     }
-    
+
+    // MARK: initialize with selectable date range
+    //4
+    public init(
+           selectedDate: Binding<Date>,
+           selectedDateRange: [DateRange],
+           color: Color = .gray,
+           activeCellFont: Font = .system(size: 16)
+       ) {
+           _selectedDate = selectedDate
+           _displayMonth = State(initialValue: Date())
+           _rangeSelection = State(initialValue: (nil, nil))
+           self.activeDateRanges = nil
+           self.activeCellColor = color
+           self.activeRangeColor = nil
+           self.disabledCellColor = .white
+           self.activeCellFont = activeCellFont
+           self.disabledCellFont = .system(size: 16)
+           self.activeStrokeColor = .orange
+           self.disabledCellFillColor = .clear
+           self.activeCellFontColor = .white
+           self.showOverlay = false
+           self.headerColor = .black
+           self.headerFont = .caption
+           self.chevronSize = 20
+           self.chevronColor = .gray
+           self.daysColor = .black
+           self.daysFont = .caption
+           self.inactiveDays = []
+           self.disabledDates = []
+           self.selectedDateRange = selectedDateRange
+       }
+
     public var body: some View {
         CalendarLayout(
             selectedDate: $selectedDate,
@@ -133,36 +166,38 @@ public struct MonthCalendarDatePicker: View {
             header: Header,
             title: Title,
             inactiveDays: inactiveDays,
-            disabledDates: disabledDates
+            disabledDates: disabledDates,
+            selectedDateRange: selectedDateRange
         )
         .equatable()
         .onAppear {
             displayMonth = $selectedDate.wrappedValue
         }
-        
     }
-    
+
     @ViewBuilder
-    private func ActiveCell(date: Date) -> some View {
+        private func ActiveCell(date: Date) -> some View {
             let isDateSelected = calendar.isDate(date, inSameDayAs: selectedDate)
             let isActiveCell = calendar.isDate(date, inSameDayAs: now)
             let isActiveRange = activeDateRanges?.contains { $0.contains(date) } ?? false
             let activeCellFillColor = isDateSelected ? activeCellColor : isActiveRange ? activeRangeColor ?? activeCellColor.opacity(0.5) : activeCellColor.opacity(0.5)
             let activeCellStrokeColor = activeCellColor
-            
+            let isInRange = isInSelectedRange(date)
+            let rangeColor: Color = .blue
+
             Button {
-                selectedDate = date
+                handleDateSelection(date)
             } label: {
                 ZStack {
                     Circle()
-                        .fill(activeCellFillColor)
+                        .fill(isInRange ? rangeColor : activeCellFillColor)
                         .frame(width: 40, height: 40)
-                    
+
                     if showOverlay && (isActiveCell || isDateSelected) {
                         Circle()
                             .stroke(activeCellStrokeColor, lineWidth: 2)
                     }
-                    
+
                     Text(DateFormatter.dayFormatter.string(from: date))
                         .font(activeCellFont)
                         .foregroundColor(activeCellFontColor)
@@ -170,8 +205,6 @@ public struct MonthCalendarDatePicker: View {
             }
             .buttonStyle(.plain)
         }
-    
-    
     @ViewBuilder
     private func DisabledCell(date: Date) -> some View {
         ZStack {
@@ -184,7 +217,7 @@ public struct MonthCalendarDatePicker: View {
                 .foregroundColor(disabledCellColor)
         }
     }
-    
+
     @ViewBuilder
     private func Title(date: Date) -> some View {
         HStack {
@@ -197,7 +230,6 @@ public struct MonthCalendarDatePicker: View {
                 withAnimation {
                     guard let newDate = calendar.date(
                         byAdding: .month,
-                        // replace with date
                         value: -1,
                         to: displayMonth
                     ) else {
@@ -210,7 +242,6 @@ public struct MonthCalendarDatePicker: View {
                     title: { Text("Previous") },
                     icon: { Image(systemName: "chevron.left").font(.system(size: chevronSize)).foregroundColor(chevronColor) }
                 )
-                
                 .labelStyle(IconOnlyLabelStyle())
                 .padding(.horizontal)
                 .frame(maxHeight: .infinity)
@@ -240,19 +271,48 @@ public struct MonthCalendarDatePicker: View {
         .buttonStyle(.plain)
         .padding(.bottom, 6)
     }
-    
+
     @ViewBuilder
     private func Header(date: Date) -> some View {
         Text(DateFormatter.weekDay
             .string(from: date)
             .uppercased()
-            
-             
         )
         .font(daysFont)
         .foregroundColor(daysColor)
     }
-}
+    
+    private func handleDateSelection(_ date: Date) {
+            if let startDate = rangeSelection.startDate {
+                if let endDate = rangeSelection.endDate {
+                    // If both startDate and endDate are already set, reset the range
+                    rangeSelection = (date, nil)
+                } else if date >= startDate {
+                    // If only startDate is set, and the new date is after the startDate, set the endDate
+                    rangeSelection.endDate = date
+                } else {
+                    // If the new date is before the startDate, set it as the new startDate
+                    rangeSelection = (date, nil)
+                }
+            } else {
+                // If no startDate is set, set the new date as the startDate
+                rangeSelection.startDate = date
+            }
+        }
+
+        private func isInSelectedRange(_ date: Date) -> Bool {
+            if let startDate = rangeSelection.startDate, let endDate = rangeSelection.endDate {
+                return (startDate...endDate).contains(date)
+            } else if let startDate = rangeSelection.startDate {
+                return calendar.isDate(date, inSameDayAs: startDate)
+            } else {
+                return false
+            }
+        }
+    }
+
+
+
 
 
 // MARK: - Previews
@@ -271,7 +331,9 @@ struct CalendarView_Previews: PreviewProvider {
         
         var body: some View {
             NavigationView {
-                MonthCalendarDatePicker(selectedDate: $selectedDate, activeDateRanges: [DateRange(startDate: startDate, endDate: endDate)], activeCellColor: .green, activeRangeColor: .green.opacity(0.5), disabledCellFontColor: .white, activeCellFont: .caption2, disabledCellFont: .caption, activeStrokeColor: .yellow, disabledCellFillColor: .gray, activeCellFontColor: .white, showOverlay: true, headerFont: .title, chevronSize: 10, chevronColor: .blue, daysColor: .black, inactiveDays: [.tuesday], disabledDates: disabledDates)
+//                MonthCalendarDatePicker(selectedDate: $selectedDate, activeDateRanges: [DateRange(startDate: startDate, endDate: endDate)], activeCellColor: .green, activeRangeColor: .green.opacity(0.5), disabledCellFontColor: .white, activeCellFont: .caption2, disabledCellFont: .caption, activeStrokeColor: .yellow, disabledCellFillColor: .gray, activeCellFontColor: .white, showOverlay: true, headerFont: .title, chevronSize: 10, chevronColor: .blue, daysColor: .black, inactiveDays: [.tuesday], disabledDates: disabledDates)
+                
+                MonthCalendarDatePicker(selectedDate: $selectedDate, selectedDateRange: [])
                 
 
             }

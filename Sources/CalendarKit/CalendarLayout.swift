@@ -27,7 +27,11 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
     public var endDate: Date?
     public var inactiveDays: [Weekday]
     public var disabledDates: [Date]
-
+    public var selectedDateRange: [DateRange]?
+    @State private var rangeStartDate: Date?
+       @State private var rangeEndDate: Date?
+    
+    
     public init(
         selectedDate: Binding<Date>,
         calendar: Calendar = Calendar(identifier: .gregorian),
@@ -156,7 +160,33 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
         self.disabledDates = disabledDates
         self.inactiveDays = isWeekendsActive ? Weekday.weekend : []
     }
-
+    
+    // MARK: 5) initialize with a selectable date range
+    public init(
+            selectedDate: Binding<Date>,
+            calendar: Calendar = Calendar(identifier: .gregorian),
+            displayMonth: Date = Date(),
+            activeDateRanges: [DateRange]? = nil,
+            activeCell: @escaping (Date) -> Day,
+            disabledCell: @escaping (Date) -> Trailing,
+            header: @escaping (Date) -> Header,
+            title: @escaping (Date) -> Title,
+            inactiveDays: [Weekday] = [],
+            disabledDates: [Date] = [],
+            selectedDateRange: [DateRange]? = nil
+        ) {
+            self._selectedDate = selectedDate
+            self.calendar = calendar
+            self.displayMonth = displayMonth
+            self.activeDateRanges = activeDateRanges
+            self.activeCell = activeCell
+            self.disabledCell = disabledCell
+            self.header = header
+            self.title = title
+            self.inactiveDays = inactiveDays
+            self.disabledDates = disabledDates
+            self.selectedDateRange = selectedDateRange
+        }
     // Constants
     public let daysInWeek = 7
     public var month: Date {
@@ -223,6 +253,27 @@ public extension CalendarLayout {
         }
         return false
     }
+    
+    private func isSelectedRange(_ date: Date) -> Bool {
+           guard let start = rangeStartDate else { return false }
+           guard let end = rangeEndDate else { return false }
+           return date >= start && date <= end
+       }
+
+       private func handleDateSelection(_ date: Date) {
+           if let start = rangeStartDate {
+               if let end = rangeEndDate {
+                   rangeStartDate = date
+                   rangeEndDate = nil
+               } else if date < start {
+                   rangeStartDate = date
+               } else {
+                   rangeEndDate = date
+               }
+           } else {
+               rangeStartDate = date
+           }
+       }
 }
 
 // MARK: - Helpers
