@@ -31,8 +31,9 @@ public struct MonthCalendarDatePicker: View {
     private let inactiveDays: [Weekday]
     private let disabledDates: [Date]
     private let selectedDateRange: [DateRange]?
+    private let rangeFontColor: Color?
     private let titleView: ((Date) -> AnyView)?
-    
+
     
     // MARK: Constants
     
@@ -65,7 +66,11 @@ public struct MonthCalendarDatePicker: View {
         inactiveDays: [Weekday] = [],
         disabledDates: [Date] = [],
         selectedDatesColor: Color = .white,
+        rangeFontColor: Color? = nil,
         titleView: ((Date) -> AnyView)? = nil
+      
+
+        
         
     ) {
         _selectedDate = selectedDate
@@ -90,7 +95,10 @@ public struct MonthCalendarDatePicker: View {
         self.disabledDates = disabledDates
         self.selectedDatesColor = .white
         self.selectedDateRange = nil
+        self.rangeFontColor = rangeFontColor
         self.titleView = titleView
+
+
         
         
     }
@@ -152,7 +160,9 @@ public struct MonthCalendarDatePicker: View {
         daysFont: Font = .caption,
         inactiveDays: [Weekday] = [],
         disabledDates: [Date] = [],
+        rangeFontColor: Color? = nil,
         titleView: ((Date) -> AnyView)? = nil
+      
         
     ) {
         _selectedDate = .constant(Date())
@@ -178,7 +188,9 @@ public struct MonthCalendarDatePicker: View {
         self.inactiveDays = inactiveDays
         self.disabledDates = disabledDates
         self.selectedDateRange = selectedDateRange
+        self.rangeFontColor = rangeFontColor
         self.titleView = titleView
+
         
     }
     
@@ -217,6 +229,7 @@ public struct MonthCalendarDatePicker: View {
         let isInRange = isInSelectedRange(date)
         let rangeColor: Color = selectedDatesColor
         
+        
         Button {
             handleDateSelection(date)
         } label: {
@@ -232,7 +245,9 @@ public struct MonthCalendarDatePicker: View {
                 
                 Text(DateFormatter.dayFormatter.string(from: date))
                     .font(activeCellFont)
-                    .foregroundColor(activeCellFontColor)
+                    .foregroundColor(isInRange ? (rangeFontColor ?? activeCellFontColor) : activeCellFontColor)
+
+                
             }
         }
         .buttonStyle(.plain)
@@ -368,12 +383,13 @@ struct CalendarView_Previews: PreviewProvider {
                 
                 ZStack {
                     Color.gray
-                    MonthCalendarDatePicker( selectedDateRange: selectedDays, activeCellColor: .clear, activeCellFontColor: .white,  selectedDatesColor: .yellow, disabledCellColor: .clear, headerColor: .white, headerFont: .title, chevronColor: .white, daysColor: .white) { date in AnyView(
+                    MonthCalendarDatePicker( selectedDateRange: selectedDays, activeCellColor: .clear, activeCellFontColor: .white,  selectedDatesColor: .yellow, disabledCellColor: .clear, headerColor: .white, headerFont: .title, chevronColor: .white, daysColor: .white, rangeFontColor: .pink) { date in AnyView(
                         Text(DateFormatter.month.string(from: date).uppercased())
                             .padding(.vertical)
                             .font(.largeTitle)
                             .foregroundColor(.blue))
                     }
+                    
                 }
             }
         }
