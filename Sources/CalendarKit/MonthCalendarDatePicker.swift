@@ -32,7 +32,7 @@ public struct MonthCalendarDatePicker: View {
     private let disabledDates: [Date]
     private let selectedDateRange: [DateRange]?
     private let rangeFontColor: Color?
-    private let titleTextLabel: (() -> AnyView)?
+    private let titleTextLabel: ((Date) -> AnyView)?
     private let previousLabel: (() -> AnyView)?
     private let nextLabel: (() -> AnyView)?
     private let customTitleView: ((Date) -> AnyView)?
@@ -65,7 +65,7 @@ public struct MonthCalendarDatePicker: View {
         disabledDates: [Date] = [],
         selectedDatesColor: Color = .white,
         rangeFontColor: Color? = nil,
-        titleTextLabel: (() -> AnyView)? = nil,
+        titleTextLabel: ((Date) -> AnyView)? = nil,
         previousLabel: (() -> AnyView)? = nil,
         nextLabel: (() -> AnyView)? = nil,
         customTitleView: ((Date) -> AnyView)? = nil
@@ -154,7 +154,7 @@ public struct MonthCalendarDatePicker: View {
         inactiveDays: [Weekday] = [],
         disabledDates: [Date] = [],
         rangeFontColor: Color? = nil,
-        titleTextLabel: (() -> AnyView)? = nil,
+        titleTextLabel: ((Date) -> AnyView)? = nil,
         previousLabel: (() -> AnyView)? = nil,
         nextLabel: (() -> AnyView)? = nil,
         customTitleView: ((Date) -> AnyView)? = nil
@@ -259,7 +259,7 @@ public struct MonthCalendarDatePicker: View {
             if let customTitleView = customTitleView {
                 customTitleView(date)
             } else {
-                titleTextLabel?() ?? AnyView(
+                titleTextLabel?(date) ?? AnyView(
                     Text(DateFormatter.monthYear.string(from: date).capitalized)
                         .padding(.vertical)
                         .font(headerFont)
