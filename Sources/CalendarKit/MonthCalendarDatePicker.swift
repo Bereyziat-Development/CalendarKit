@@ -32,19 +32,17 @@ public struct MonthCalendarDatePicker: View {
     private let disabledDates: [Date]
     private let selectedDateRange: [DateRange]?
     private let rangeFontColor: Color?
-    private let titleView: ((Date) -> AnyView)?
+    private let titleTextLabel: (() -> AnyView)?
+    private let previousLabel: (() -> AnyView)?
+    private let nextLabel: (() -> AnyView)?
+    private let customTitleView: ((Date) -> AnyView)?
 
-    
     // MARK: Constants
-    
-    /// WARNING: The variable now is initialized upon creation of the DisposalCalendar
-    /// If the CalendarDisposal View will stay displayed for too long at midnight there maybe an error
-    /// in the now date (it will display yesterday)
+
     private let now = Date()
     private let calendar = Calendar(identifier: .gregorian)
-    
-    // MARK: initialize with a list of date ranges
-    //1
+
+    // MARK: Initialize with a list of date ranges
     public init(
         selectedDate: Binding<Date>,
         activeDateRanges: [DateRange],
@@ -67,11 +65,10 @@ public struct MonthCalendarDatePicker: View {
         disabledDates: [Date] = [],
         selectedDatesColor: Color = .white,
         rangeFontColor: Color? = nil,
-        titleView: ((Date) -> AnyView)? = nil
-      
-
-        
-        
+        titleTextLabel: (() -> AnyView)? = nil,
+        previousLabel: (() -> AnyView)? = nil,
+        nextLabel: (() -> AnyView)? = nil,
+        customTitleView: ((Date) -> AnyView)? = nil
     ) {
         _selectedDate = selectedDate
         _displayMonth = State(initialValue: now)
@@ -93,18 +90,16 @@ public struct MonthCalendarDatePicker: View {
         self.daysFont = daysFont
         self.inactiveDays = inactiveDays
         self.disabledDates = disabledDates
-        self.selectedDatesColor = .white
+        self.selectedDatesColor = selectedDatesColor
         self.selectedDateRange = nil
         self.rangeFontColor = rangeFontColor
-        self.titleView = titleView
-
-
-        
-        
+        self.titleTextLabel = titleTextLabel
+        self.previousLabel = previousLabel
+        self.nextLabel = nextLabel
+        self.customTitleView = customTitleView
     }
-    
-    // MARK: initialize with an optional startDate and an optional endDate
-    //2
+
+    // MARK: Initialize with an optional startDate and an optional endDate
     public init(
         selectedDate: Binding<Date>,
         startDate: Date? = nil,
@@ -121,9 +116,8 @@ public struct MonthCalendarDatePicker: View {
             disabledCellFont: disabledCellFont
         )
     }
-    
-    // MARK: initialize with one date range
-    //3
+
+    // MARK: Initialize with one date range
     public init(
         selectedDate: Binding<Date>,
         activeDateRange: DateRange,
@@ -139,9 +133,8 @@ public struct MonthCalendarDatePicker: View {
             disabledCellFont: disabledCellFont
         )
     }
-    
-    // MARK: initialize with selectable date range
-    //4
+
+    // MARK: Initialize with selectable date range
     public init(
         selectedDateRange: [DateRange],
         activeCellColor: Color = .green,
@@ -161,9 +154,10 @@ public struct MonthCalendarDatePicker: View {
         inactiveDays: [Weekday] = [],
         disabledDates: [Date] = [],
         rangeFontColor: Color? = nil,
-        titleView: ((Date) -> AnyView)? = nil
-      
-        
+        titleTextLabel: (() -> AnyView)? = nil,
+        previousLabel: (() -> AnyView)? = nil,
+        nextLabel: (() -> AnyView)? = nil,
+        customTitleView: ((Date) -> AnyView)? = nil
     ) {
         _selectedDate = .constant(Date())
         _displayMonth = State(initialValue: Date())
@@ -189,26 +183,22 @@ public struct MonthCalendarDatePicker: View {
         self.disabledDates = disabledDates
         self.selectedDateRange = selectedDateRange
         self.rangeFontColor = rangeFontColor
-        self.titleView = titleView
-
-        
+        self.titleTextLabel = titleTextLabel
+        self.previousLabel = previousLabel
+        self.nextLabel = nextLabel
+        self.customTitleView = customTitleView
     }
-    
+
     public var body: some View {
         CalendarLayout(
             selectedDate: selectedDateRange == nil ? $selectedDate : .constant(Date()),
-            //TODO: not best implementaiton but works
             calendar: calendar,
             displayMonth: displayMonth,
             activeDateRanges: activeDateRanges,
             activeCell: ActiveCell,
             disabledCell: DisabledCell,
             header: Header,
-            title: { date in
-                if let customTitleView = titleView {
-                    return customTitleView(date)
-                } else {
-                    return AnyView(Title(date: date))}},
+            title: Title,
             inactiveDays: inactiveDays,
             disabledDates: disabledDates,
             selectedDateRange: selectedDateRange
@@ -218,7 +208,7 @@ public struct MonthCalendarDatePicker: View {
             displayMonth = $selectedDate.wrappedValue
         }
     }
-    
+
     @ViewBuilder
     private func ActiveCell(date: Date) -> some View {
         let isDateSelected = calendar.isDate(date, inSameDayAs: selectedDate)
@@ -228,8 +218,7 @@ public struct MonthCalendarDatePicker: View {
         let activeCellStrokeColor = activeCellColor
         let isInRange = isInSelectedRange(date)
         let rangeColor: Color = selectedDatesColor
-        
-        
+
         Button {
             handleDateSelection(date)
         } label: {
@@ -237,21 +226,20 @@ public struct MonthCalendarDatePicker: View {
                 Circle()
                     .fill(isInRange ? rangeColor : activeCellFillColor)
                     .frame(width: 40, height: 40)
-                
+
                 if showOverlay && (isActiveCell || isDateSelected) {
                     Circle()
                         .stroke(activeCellStrokeColor, lineWidth: 2)
                 }
-                
+
                 Text(DateFormatter.dayFormatter.string(from: date))
                     .font(activeCellFont)
                     .foregroundColor(isInRange ? (rangeFontColor ?? activeCellFontColor) : activeCellFontColor)
-
-                
             }
         }
         .buttonStyle(.plain)
     }
+
     @ViewBuilder
     private func DisabledCell(date: Date) -> some View {
         ZStack {
@@ -264,61 +252,70 @@ public struct MonthCalendarDatePicker: View {
                 .foregroundColor(disabledCellColor)
         }
     }
-    
+
     @ViewBuilder
     private func Title(date: Date) -> some View {
         HStack {
-            Text(DateFormatter.monthYear.string(from: date).capitalized)
-                .padding(.vertical)
-                .font(headerFont)
-                .foregroundColor(headerColor)
-            Spacer()
-            Button {
-                withAnimation {
-                    guard let newDate = calendar.date(
-                        byAdding: .month,
-                        value: -1,
-                        to: displayMonth
-                    ) else {
-                        return
-                    }
-                    displayMonth = newDate
-                }
-            } label: {
-                Label(
-                    title: { Text("Previous") },
-                    icon: { Image(systemName: "chevron.left").font(.system(size: chevronSize)).foregroundColor(chevronColor) }
+            if let customTitleView = customTitleView {
+                customTitleView(date)
+            } else {
+                titleTextLabel?() ?? AnyView(
+                    Text(DateFormatter.monthYear.string(from: date).capitalized)
+                        .padding(.vertical)
+                        .font(headerFont)
+                        .foregroundColor(headerColor)
                 )
-                .labelStyle(IconOnlyLabelStyle())
-                .padding(.horizontal)
-                .frame(maxHeight: .infinity)
-            }
-            Button {
-                withAnimation {
-                    guard let newDate = calendar.date(
-                        byAdding: .month,
-                        value: 1,
-                        to: displayMonth
-                    ) else {
-                        return
+                Spacer()
+                
+                Button {
+                    withAnimation {
+                        guard let newDate = calendar.date(
+                            byAdding: .month,
+                            value: -1,
+                            to: displayMonth
+                        ) else {
+                            return
+                        }
+                        displayMonth = newDate
                     }
-                    displayMonth = newDate
+                } label: {
+                    previousLabel?() ?? AnyView(
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: chevronSize))
+                            .foregroundColor(chevronColor)
+                            .labelStyle(IconOnlyLabelStyle())
+                            .padding(.horizontal)
+                            .frame(maxHeight: .infinity)
+                    )
                 }
-            } label: {
-                Label(
-                    title: { Text("Next") },
-                    icon: { Image(systemName: "chevron.right").font(.system(size: chevronSize)).foregroundColor(chevronColor) }
-                )
-                .labelStyle(IconOnlyLabelStyle())
-                .padding(.horizontal)
-                .frame(maxHeight: .infinity)
+                Button {
+                    withAnimation {
+                        guard let newDate = calendar.date(
+                            byAdding: .month,
+                            value: 1,
+                            to: displayMonth
+                        ) else {
+                            return
+                        }
+                        displayMonth = newDate
+                    }
+                } label: {
+                    nextLabel?() ?? AnyView(
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: chevronSize))
+                            .foregroundColor(chevronColor)
+                            .labelStyle(IconOnlyLabelStyle())
+                            .padding(.horizontal)
+                            .frame(maxHeight: .infinity)
+                    )
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
         }
         .buttonStyle(.plain)
         .padding(.bottom, 6)
     }
-    
+
     @ViewBuilder
     private func Header(date: Date) -> some View {
         Text(DateFormatter.weekDay
@@ -328,7 +325,7 @@ public struct MonthCalendarDatePicker: View {
         .font(daysFont)
         .foregroundColor(daysColor)
     }
-    
+
     private func handleDateSelection(_ date: Date) {
         if selectedDateRange == nil {
             selectedDate = date
@@ -344,8 +341,9 @@ public struct MonthCalendarDatePicker: View {
             } else {
                 rangeSelection.startDate = date
             }
-        }}
-    
+        }
+    }
+
     private func isInSelectedRange(_ date: Date) -> Bool {
         if let startDate = rangeSelection.startDate, let endDate = rangeSelection.endDate {
             return (startDate...endDate).contains(date)
@@ -356,10 +354,6 @@ public struct MonthCalendarDatePicker: View {
         }
     }
 }
-
-
-
-
 
 // MARK: - Previews
 
@@ -374,27 +368,36 @@ struct CalendarView_Previews: PreviewProvider {
             Date(year: 2023, month: 11, day: 11)
         ]
         private var selectedDays = [DateRange]()
-        
-        
+
+
         var body: some View {
             NavigationView {
                 //                MonthCalendarDatePicker(selectedDate: $selectedDate, activeDateRanges: [DateRange(startDate: startDate, endDate: endDate)], activeCellColor: .green, activeRangeColor: .green.opacity(0.5), disabledCellFontColor: .white, activeCellFont: .caption2, disabledCellFont: .caption, activeStrokeColor: .yellow, disabledCellFillColor: .gray, activeCellFontColor: .white, showOverlay: true, headerFont: .title, chevronSize: 10, chevronColor: .blue, daysColor: .black, inactiveDays: [.tuesday], disabledDates: disabledDates)
-                
-                
+
+
                 ZStack {
                     Color.gray
-                    MonthCalendarDatePicker( selectedDateRange: selectedDays, activeCellColor: .clear, activeCellFontColor: .white,  selectedDatesColor: .yellow, disabledCellColor: .clear, headerColor: .white, headerFont: .title, chevronColor: .white, daysColor: .white, rangeFontColor: .pink) { date in AnyView(
-                        Text(DateFormatter.month.string(from: date).uppercased())
-                            .padding(.vertical)
-                            .font(.largeTitle)
-                            .foregroundColor(.blue))
-                    }
-                    
+                    MonthCalendarDatePicker(
+                        selectedDateRange: selectedDays,
+                        activeCellColor: .clear,
+                        activeCellFontColor: .white,
+                        selectedDatesColor: .yellow,
+                        disabledCellColor: .clear,
+                        headerColor: .white,
+                        headerFont: .title,
+                        chevronColor: .white,
+                        daysColor: .white,
+                        rangeFontColor: .pink,
+                        previousLabel: { AnyView(Text("Prev").padding()) },
+                        nextLabel: { AnyView(Text("Next")) }
+                      
+                    )
+
                 }
             }
         }
     }
-    
+
     static var previews: some View {
         ExampleView()
             .previewDisplayName("iPhone 13")
