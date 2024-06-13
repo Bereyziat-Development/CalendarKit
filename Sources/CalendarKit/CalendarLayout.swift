@@ -254,26 +254,9 @@ public extension CalendarLayout {
         return false
     }
     
-    private func isSelectedRange(_ date: Date) -> Bool {
-           guard let start = rangeStartDate else { return false }
-           guard let end = rangeEndDate else { return false }
-           return date >= start && date <= end
-       }
 
-       private func handleDateSelection(_ date: Date) {
-           if let start = rangeStartDate {
-               if let end = rangeEndDate {
-                   rangeStartDate = date
-                   rangeEndDate = nil
-               } else if date < start {
-                   rangeStartDate = date
-               } else {
-                   rangeEndDate = date
-               }
-           } else {
-               rangeStartDate = date
-           }
-       }
+
+     
 }
 
 // MARK: - Helpers
