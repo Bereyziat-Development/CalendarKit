@@ -29,7 +29,7 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
     public var disabledDates: [Date]
     public var selectedDateRange: [DateRange]?
     @State private var rangeStartDate: Date?
-       @State private var rangeEndDate: Date?
+    @State private var rangeEndDate: Date?
     
     
     public init(
