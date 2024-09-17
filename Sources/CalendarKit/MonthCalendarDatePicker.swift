@@ -150,10 +150,10 @@ public struct MonthCalendarDatePicker: View {
     private func ActiveCell(date: Date) -> some View {
         let isDateSelected = calendar.isDate(date, inSameDayAs: selectedDate)
         let isInCurrentMonth = calendar.isDate(date, equalTo: displayMonth, toGranularity: .month)
-        let isToday = calendar.isDate(date, inSameDayAs: now)
-        
-        let activeCellFillColor = activeCellColor
-        let activeCellStrokeColor = activeCellColor
+        let isActiveRange = activeDateRanges?.contains { $0.contains(date) } ?? false
+        let isActiveCell = calendar.isDate(date, inSameDayAs: now)
+        let activeCellFillColor = isDateSelected ? activeCellColor : isActiveRange ? activeRangeColor ?? activeCellColor.opacity(0.5) : activeCellColor.opacity(0.5)
+        let activeCellStrokeColor = activeStrokeColor
         
         Button {
             if !isInCurrentMonth {
@@ -167,7 +167,7 @@ public struct MonthCalendarDatePicker: View {
                     .fill(isInCurrentMonth ? activeCellFillColor : disabledCellFillColor)
                     .frame(width: 40, height: 40)
                 
-                if showOverlay && (isToday || isDateSelected) {
+                if showOverlay && (isActiveCell || isDateSelected) {
                     Circle()
                         .stroke(activeCellStrokeColor, lineWidth: 2)
                 }
@@ -199,7 +199,7 @@ public struct MonthCalendarDatePicker: View {
         }) ?? false
         let outOfRangeDates = calendar.compare(date, to: displayMonth, toGranularity: .month) != .orderedSame
         let fillColor = isActiveDate && outOfRangeDates ? activeCellColor : disabledCellFillColor
-
+        
         
         Button {
             if outOfRangeDates {
@@ -321,7 +321,15 @@ public struct MonthCalendarDatePicker: View {
 struct CalendarView_Previews: PreviewProvider {
     struct ExampleView: View {
         @State private var selectedDate = Date()
-        private let activeDateRange = DateRange(startDate: Calendar.current.date(byAdding: .weekOfYear, value: 6, to: Date())!, endDate: Calendar.current.date(byAdding: .weekOfYear, value: 12, to: Date())!)
+        
+        var activeDateRange: CalendarKit.DateRange {
+            let now = Date()
+            let numberOfDays = 90
+            let calendar = Constant.Time.calendar
+            let startDate = calendar.date(byAdding: .day, value: -numberOfDays, to: now)!
+            let endDate = calendar.date(byAdding: .day, value: +numberOfDays, to: now)!
+            return CalendarKit.DateRange(startDate: startDate, endDate: endDate)
+        }
         private let startDate = Date()
         private let endDate = Date(year: 2027, month: 7, day: 12)
         private let disabledDates = [
@@ -330,7 +338,7 @@ struct CalendarView_Previews: PreviewProvider {
         
         var body: some View {
             NavigationView {
-                MonthCalendarDatePicker(selectedDate: $selectedDate, activeDateRanges: [DateRange(startDate: startDate, endDate: endDate)], activeCellColor: .green, activeRangeColor: .blue, disabledCellFontColor: .white, activeCellFont: .caption2, disabledCellFont: .caption, activeStrokeColor: .yellow, disabledCellFillColor: .gray,
+                MonthCalendarDatePicker(selectedDate: $selectedDate, activeDateRanges: [activeDateRange], activeCellColor: .green, activeRangeColor: .blue, disabledCellFontColor: .white, activeCellFont: .caption2, disabledCellFont: .caption, activeStrokeColor: .yellow, disabledCellFillColor: .gray,
                                         outOfRangeCellFillColor: .red,
                                         activeCellFontColor: .white, showOverlay: true, headerFont: .title, chevronSize: 10, chevronColor: .blue, daysColor: .black, inactiveDays: [.tuesday], disabledDates: disabledDates)
             }}
