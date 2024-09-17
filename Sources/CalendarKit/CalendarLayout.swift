@@ -13,14 +13,15 @@ public enum Weekday: Int, CaseIterable {
     }
 }
 
-public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: View>: View {
+public struct CalendarLayout<ActiveDay: View, Header: View, Title: View, DisabledDay: View, OutOfMonthDay :View>: View {
     @Binding var selectedDate: Date
-
+    
     public let calendar: Calendar
     public let displayMonth: Date
     public let activeDateRanges: [DateRange]?
-    public let activeCell: (Date) -> Day?
-    public let disabledCell: (Date) -> Trailing
+    public let activeDay: (Date) -> ActiveDay
+    public let disabledDay: (Date) -> DisabledDay
+    public let outOfMonthDay: (Date) -> OutOfMonthDay
     public let header: (Date) -> Header
     public let title: (Date) -> Title
     public var startDate: Date?
@@ -28,8 +29,8 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
     public var inactiveDays: [Weekday]
     public var disabledDates: [Date]
     public var selectedDateRange: [DateRange]?
-    @State private var rangeStartDate: Date?
-    @State private var rangeEndDate: Date?
+    @State private var rangeStartDate: Date? = nil
+    @State private var rangeEndDate: Date? = nil
     
     
     public init(
@@ -37,8 +38,9 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
         calendar: Calendar = Calendar(identifier: .gregorian),
         displayMonth: Date = Date(),
         activeDateRanges: [DateRange]? = nil,
-        activeCell: @escaping (Date) -> Day,
-        disabledCell: @escaping (Date) -> Trailing,
+        activeDay: @escaping (Date) -> ActiveDay,
+        disableDay: @escaping (Date) -> DisabledDay,
+        outOfMonthDay: @escaping (Date) -> OutOfMonthDay,
         header: @escaping (Date) -> Header,
         title: @escaping (Date) -> Title,
         inactiveDays: [Weekday] = [],
@@ -48,24 +50,26 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
         self.calendar = calendar
         self.displayMonth = displayMonth
         self.activeDateRanges = activeDateRanges
-        self.activeCell = activeCell
-        self.disabledCell = disabledCell
+        self.activeDay = activeDay
+        self.disabledDay = disableDay
+        self.outOfMonthDay = outOfMonthDay
         self.header = header
         self.title = title
         self.inactiveDays = inactiveDays
         self.disabledDates = disabledDates
     }
-
+    
     // MARK: 1) initialize with an optional startDate and an optional endDate
-
+    
     init(
         selectedDate: Binding<Date>,
         calendar: Calendar = Calendar(identifier: .gregorian),
         displayMonth: Date = Date(),
         startDate: Date? = nil,
         endDate: Date? = nil,
-        activeCell: @escaping (Date) -> Day,
-        disabledCell: @escaping (Date) -> Trailing,
+        activeDay: @escaping (Date) -> ActiveDay,
+        disabledDay: @escaping (Date) -> DisabledDay,
+        outOfMonthDay: @escaping (Date) -> OutOfMonthDay,
         header: @escaping (Date) -> Header,
         title: @escaping (Date) -> Title,
         inactiveDays: [Weekday] = []
@@ -75,23 +79,25 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
             calendar: calendar,
             displayMonth: displayMonth,
             activeDateRange: DateRange(startDate: startDate, endDate: endDate),
-            activeCell: activeCell,
-            disabledCell: disabledCell,
+            activeDay: activeDay,
+            disabledDay: disabledDay,
+            outOfMonthDay: outOfMonthDay,
             header: header,
             title: title,
             inactiveDays: inactiveDays
         )
     }
-
+    
     // MARK: 2) initialize with a single date range
-
+    
     init(
         selectedDate: Binding<Date>,
         calendar: Calendar = Calendar(identifier: .gregorian),
         displayMonth: Date = Date(),
         activeDateRange: DateRange,
-        activeCell: @escaping (Date) -> Day,
-        disabledCell: @escaping (Date) -> Trailing,
+        activeDay: @escaping (Date) -> ActiveDay,
+        disabledDay: @escaping (Date) -> DisabledDay,
+        outOfMonthDay: @escaping (Date) -> OutOfMonthDay,
         header: @escaping (Date) -> Header,
         title: @escaping (Date) -> Title,
         inactiveDays: [Weekday] = []
@@ -101,23 +107,25 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
             calendar: calendar,
             displayMonth: displayMonth,
             activeDateRanges: [activeDateRange],
-            activeCell: activeCell,
-            disabledCell: disabledCell,
+            activeDay: activeDay,
+            disableDay: disabledDay,
+            outOfMonthDay: outOfMonthDay,
             header: header,
             title: title,
             inactiveDays: inactiveDays
         )
     }
-
+    
     // MARK: 3) initialize with a disabledDates
-
+    
     init(
         selectedDate: Binding<Date>,
         calendar: Calendar = Calendar(identifier: .gregorian),
         displayMonth: Date = Date(),
         activeDateRange: DateRange,
-        activeCell: @escaping (Date) -> Day,
-        disabledCell: @escaping (Date) -> Trailing,
+        activeDay: @escaping (Date) -> ActiveDay,
+        disabledDay: @escaping (Date) -> DisabledDay,
+        outOfMonthDay: @escaping (Date) -> OutOfMonthDay,
         header: @escaping (Date) -> Header,
         title: @escaping (Date) -> Title,
         disabledDates: [Date] = [],
@@ -127,23 +135,25 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
         self.calendar = calendar
         self.displayMonth = displayMonth
         self.activeDateRanges = [activeDateRange]
-        self.activeCell = activeCell
-        self.disabledCell = disabledCell
+        self.activeDay = activeDay
+        self.disabledDay = disabledDay
+        self.outOfMonthDay = outOfMonthDay
         self.header = header
         self.title = title
         self.disabledDates = disabledDates
         self.inactiveDays = inactiveDays
     }
-
+    
     // MARK: 4) initialize with a weekendsActive parameter
-
+    
     public init(
         selectedDate: Binding<Date>,
         calendar: Calendar = Calendar(identifier: .gregorian),
         displayMonth: Date = Date(),
         activeDateRanges: [DateRange]? = nil,
-        activeCell: @escaping (Date) -> Day,
-        disabledCell: @escaping (Date) -> Trailing,
+        activeDay: @escaping (Date) -> ActiveDay,
+        disabledDay: @escaping (Date) -> DisabledDay,
+        outOfMonthDay: @escaping (Date) -> OutOfMonthDay,
         header: @escaping (Date) -> Header,
         title: @escaping (Date) -> Title,
         disabledDates: [Date] = [],
@@ -153,8 +163,9 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
         self.calendar = calendar
         self.displayMonth = displayMonth
         self.activeDateRanges = activeDateRanges
-        self.activeCell = activeCell
-        self.disabledCell = disabledCell
+        self.activeDay = activeDay
+        self.disabledDay = disabledDay
+        self.outOfMonthDay = outOfMonthDay
         self.header = header
         self.title = title
         self.disabledDates = disabledDates
@@ -163,49 +174,51 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
     
     // MARK: 5) initialize with a selectable date range
     public init(
-            selectedDate: Binding<Date>,
-            calendar: Calendar = Calendar(identifier: .gregorian),
-            displayMonth: Date = Date(),
-            activeDateRanges: [DateRange]? = nil,
-            activeCell: @escaping (Date) -> Day,
-            disabledCell: @escaping (Date) -> Trailing,
-            header: @escaping (Date) -> Header,
-            title: @escaping (Date) -> Title,
-            inactiveDays: [Weekday] = [],
-            disabledDates: [Date] = [],
-            selectedDateRange: [DateRange]? = nil
-        ) {
-            self._selectedDate = selectedDate
-            self.calendar = calendar
-            self.displayMonth = displayMonth
-            self.activeDateRanges = activeDateRanges
-            self.activeCell = activeCell
-            self.disabledCell = disabledCell
-            self.header = header
-            self.title = title
-            self.inactiveDays = inactiveDays
-            self.disabledDates = disabledDates
-            self.selectedDateRange = selectedDateRange
-        }
+        selectedDate: Binding<Date>,
+        calendar: Calendar = Calendar(identifier: .gregorian),
+        displayMonth: Date = Date(),
+        activeDateRanges: [DateRange]? = nil,
+        activeDay: @escaping (Date) -> ActiveDay,
+        disabledDay: @escaping (Date) -> DisabledDay,
+        outOfMonthDay: @escaping (Date) -> OutOfMonthDay,
+        header: @escaping (Date) -> Header,
+        title: @escaping (Date) -> Title,
+        inactiveDays: [Weekday] = [],
+        disabledDates: [Date] = [],
+        selectedDateRange: [DateRange]? = nil
+    ) {
+        self._selectedDate = selectedDate
+        self.calendar = calendar
+        self.displayMonth = displayMonth
+        self.activeDateRanges = activeDateRanges
+        self.activeDay = activeDay
+        self.disabledDay = disabledDay
+        self.outOfMonthDay = outOfMonthDay
+        self.header = header
+        self.title = title
+        self.inactiveDays = inactiveDays
+        self.disabledDates = disabledDates
+        self.selectedDateRange = selectedDateRange
+    }
     // Constants
     public let daysInWeek = 7
     public var month: Date {
         displayMonth.startOfMonth(using: calendar)
     }
-
+    
     public var days: [Date] {
         makeDays()
     }
-
+    
     public var body: some View {
         LazyVGrid(columns: Array(repeating: GridItem(), count: daysInWeek)) {
             Section(header: title(month)) {
                 ForEach(days.prefix(daysInWeek), id: \.self, content: header)
                 ForEach(days, id: \.self) { date in
                     if isActive(date) {
-                        activeCell(date)
+                        activeDay(date)
                     } else {
-                        disabledCell(date)
+                        disabledDay(date)
                     }
                 }
             }
@@ -218,8 +231,8 @@ public struct CalendarLayout<Day: View, Header: View, Title: View, Trailing: Vie
 extension CalendarLayout: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         return lhs.calendar == rhs.calendar &&
-            lhs.selectedDate == rhs.selectedDate &&
-            lhs.displayMonth == rhs.displayMonth
+        lhs.selectedDate == rhs.selectedDate &&
+        lhs.displayMonth == rhs.displayMonth
     }
 }
 
@@ -227,25 +240,25 @@ public extension CalendarLayout {
     private func isInMonth(_ date: Date) -> Bool {
         calendar.isDate(date, equalTo: month, toGranularity: .month)
     }
-
+    
     private func isDateDisabled(_ date: Date) -> Bool {
         return disabledDates.contains { Calendar.current.isDate($0, inSameDayAs: date) }
     }
-
+    
     private func isActive(_ date: Date) -> Bool {
         guard let activeDateRanges = activeDateRanges else { return isInMonth(date) }
-
+        
         // Check if the date is in disabledDates
         if disabledDates.contains(where: { Calendar.current.isDate($0, inSameDayAs: date) }) {
             return false
         }
-
+        
         // Check if Weekdays are active and if the date is a weekend
         let currentDay = Weekday(rawValue: Calendar.current.component(.weekday, from: date))
         if let currentDay, inactiveDays.contains(currentDay) {
             return false
         }
-
+        
         for dateRange in activeDateRanges {
             if isInMonth(date) && dateRange.contains(date) {
                 return true
@@ -254,9 +267,9 @@ public extension CalendarLayout {
         return false
     }
     
-
-
-     
+    
+    
+    
 }
 
 // MARK: - Helpers
@@ -269,7 +282,7 @@ public extension CalendarLayout {
         else {
             return []
         }
-
+        
         let dateInterval = DateInterval(start: monthFirstWeek.start, end: monthLastWeek.end)
         return calendar.generateDays(for: dateInterval)
     }
@@ -295,7 +308,7 @@ public extension Calendar {
         }
         return dates
     }
-
+    
     func generateDays(for dateInterval: DateInterval) -> [Date] {
         generateDates(
             for: dateInterval,

@@ -19,6 +19,7 @@ public struct MonthCalendarDatePicker: View {
     private let disabledCellFont: Font
     private let activeStrokeColor: Color
     private let disabledCellFillColor: Color
+    private let outOfRangeCellFillColor: Color
     private let activeCellFontColor: Color
     private let selectedDatesColor: Color
     private let showOverlay: Bool
@@ -49,6 +50,7 @@ public struct MonthCalendarDatePicker: View {
         disabledCellFont: Font = .system(size: 16),
         activeStrokeColor: Color = .orange,
         disabledCellFillColor: Color = .clear,
+        outOfRangeCellFillColor: Color? = nil,
         activeCellFontColor: Color = .white,
         showOverlay: Bool = false,
         headerColor: Color = .black,
@@ -71,6 +73,7 @@ public struct MonthCalendarDatePicker: View {
         self.disabledCellFont = disabledCellFont
         self.activeStrokeColor = activeStrokeColor
         self.disabledCellFillColor = disabledCellFillColor
+        self.outOfRangeCellFillColor = outOfRangeCellFillColor ?? disabledCellFillColor
         self.activeCellFontColor = activeCellFontColor
         self.showOverlay = showOverlay
         self.headerColor = headerColor
@@ -128,8 +131,9 @@ public struct MonthCalendarDatePicker: View {
             calendar: calendar,
             displayMonth: displayMonth,
             activeDateRanges: activeDateRanges,
-            activeCell: ActiveCell,
-            disabledCell: DisabledCell,
+            activeDay: ActiveCell,
+            disabledDay: DisabledCell,
+            outOfMonthDay: OutOfMonthDay,
             header: Header,
             title: Title,
             inactiveDays: inactiveDays,
@@ -145,42 +149,64 @@ public struct MonthCalendarDatePicker: View {
     @ViewBuilder
     private func ActiveCell(date: Date) -> some View {
         let isDateSelected = calendar.isDate(date, inSameDayAs: selectedDate)
-        let isActiveCell = calendar.isDate(date, inSameDayAs: now)
+        let isInCurrentMonth = calendar.isDate(date, equalTo: displayMonth, toGranularity: .month)
+        let isToday = calendar.isDate(date, inSameDayAs: now)
+        
         let activeCellFillColor = activeCellColor.opacity(0.5)
         let activeCellStrokeColor = activeCellColor
         
         Button {
-            handleDateSelection(date)
+            if !isInCurrentMonth {
+                handleOutOfMonthSelection(date)
+            } else {
+                handleDateSelection(date)
+            }
         } label: {
             ZStack {
                 Circle()
-                    .fill(activeCellFillColor)
+                    .fill(isInCurrentMonth ? activeCellFillColor : disabledCellFillColor)
                     .frame(width: 40, height: 40)
                 
-                if showOverlay && (isActiveCell || isDateSelected) {
+                if showOverlay && (isToday || isDateSelected) {
                     Circle()
                         .stroke(activeCellStrokeColor, lineWidth: 2)
                 }
                 
                 Text(DateFormatter.dayFormatter.string(from: date))
                     .font(activeCellFont)
-                    .foregroundColor( activeCellFontColor)
+                    .foregroundColor(isInCurrentMonth ? activeCellFontColor : disabledCellColor)
             }
         }
         .buttonStyle(.plain)
     }
     
     @ViewBuilder
+    private func OutOfMonthDay(date: Date) -> some View {
+        Text("")
+    }
+    
+    
+    //DisableDCell with behaviour for changing displayed month when user taps on part of new/ previous month (outOfRangeDates).
+    @ViewBuilder
     private func DisabledCell(date: Date) -> some View {
-        ZStack {
-            Circle()
-                .fill(disabledCellFillColor)
-                .overlay(Circle().stroke(calendar.isDate(date, inSameDayAs: now) ? .orange : .clear, lineWidth: 2))
-                .frame(width: 40, height: 40)
-            Text(DateFormatter.dayFormatter.string(from: date))
-                .font(disabledCellFont)
-                .foregroundColor(disabledCellColor)
+        let outOfRangeDates = calendar.compare(date, to: displayMonth, toGranularity: .month) != .orderedSame
+        let outOfRangeColor = outOfRangeDates ? outOfRangeCellFillColor : disabledCellFillColor
+        
+        Button {
+            if outOfRangeDates {
+                handleOutOfMonthSelection(date) }
+        } label: {
+            ZStack {
+                Circle()
+                    .fill(outOfRangeColor)
+                    .overlay(Circle().stroke(calendar.isDate(date, inSameDayAs: now) ? .orange : .clear, lineWidth: 2))
+                    .frame(width: 40, height: 40)
+                Text(DateFormatter.dayFormatter.string(from: date))
+                    .font(disabledCellFont)
+                    .foregroundColor(disabledCellColor)
+            }
         }
+        .buttonStyle(.plain)
     }
     
     @ViewBuilder
@@ -267,6 +293,17 @@ public struct MonthCalendarDatePicker: View {
             }
         }
     }
+    private func handleOutOfMonthSelection(_ date: Date) {
+        let comparison = calendar.compare(date, to: displayMonth, toGranularity: .month)
+        
+        withAnimation {
+            if comparison == .orderedAscending {
+                displayMonth = calendar.date(byAdding: .month, value: -1, to: displayMonth) ?? displayMonth
+            } else if comparison == .orderedDescending {
+                displayMonth = calendar.date(byAdding: .month, value: 1, to: displayMonth) ?? displayMonth
+            }
+        }
+    }
 }
 
 // MARK: - Previews
@@ -284,7 +321,10 @@ struct CalendarView_Previews: PreviewProvider {
         
         var body: some View {
             NavigationView {
-                MonthCalendarDatePicker(selectedDate: $selectedDate, activeDateRanges: [DateRange(startDate: startDate, endDate: endDate)], activeCellColor: .green, activeRangeColor: .green.opacity(0.5), disabledCellFontColor: .white, activeCellFont: .caption2, disabledCellFont: .caption, activeStrokeColor: .yellow, disabledCellFillColor: .gray, activeCellFontColor: .white, showOverlay: true, headerFont: .title, chevronSize: 10, chevronColor: .blue, daysColor: .black, inactiveDays: [.tuesday], disabledDates: disabledDates) }}
+                MonthCalendarDatePicker(selectedDate: $selectedDate, activeDateRanges: [DateRange(startDate: startDate, endDate: endDate)], activeCellColor: .green, activeRangeColor: .green.opacity(0.5), disabledCellFontColor: .white, activeCellFont: .caption2, disabledCellFont: .caption, activeStrokeColor: .yellow, disabledCellFillColor: .gray,
+                                        outOfRangeCellFillColor: .red,
+                                        activeCellFontColor: .white, showOverlay: true, headerFont: .title, chevronSize: 10, chevronColor: .blue, daysColor: .black, inactiveDays: [.tuesday], disabledDates: disabledDates)
+            }}
     }
     
     static var previews: some View {
