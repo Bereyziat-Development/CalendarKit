@@ -152,7 +152,7 @@ public struct MonthCalendarDatePicker: View {
         let isInCurrentMonth = calendar.isDate(date, equalTo: displayMonth, toGranularity: .month)
         let isToday = calendar.isDate(date, inSameDayAs: now)
         
-        let activeCellFillColor = activeCellColor.opacity(0.5)
+        let activeCellFillColor = activeCellColor
         let activeCellStrokeColor = activeCellColor
         
         Button {
@@ -189,8 +189,17 @@ public struct MonthCalendarDatePicker: View {
     //DisableDCell with behaviour for changing displayed month when user taps on part of new/ previous month (outOfRangeDates).
     @ViewBuilder
     private func DisabledCell(date: Date) -> some View {
+        
+        //Check if the date is within the active date range
+        let isActiveDate = activeDateRanges?.contains(where: { range in
+            if let start = range.startDate, let end = range.endDate {
+                return date >= start && date <= end
+            }
+            return false
+        }) ?? false
         let outOfRangeDates = calendar.compare(date, to: displayMonth, toGranularity: .month) != .orderedSame
-        let outOfRangeColor = outOfRangeDates ? outOfRangeCellFillColor : disabledCellFillColor
+        let fillColor = isActiveDate && outOfRangeDates ? activeCellColor : disabledCellFillColor
+
         
         Button {
             if outOfRangeDates {
@@ -198,7 +207,7 @@ public struct MonthCalendarDatePicker: View {
         } label: {
             ZStack {
                 Circle()
-                    .fill(outOfRangeColor)
+                    .fill(fillColor)
                     .overlay(Circle().stroke(calendar.isDate(date, inSameDayAs: now) ? .orange : .clear, lineWidth: 2))
                     .frame(width: 40, height: 40)
                 Text(DateFormatter.dayFormatter.string(from: date))
@@ -321,7 +330,7 @@ struct CalendarView_Previews: PreviewProvider {
         
         var body: some View {
             NavigationView {
-                MonthCalendarDatePicker(selectedDate: $selectedDate, activeDateRanges: [DateRange(startDate: startDate, endDate: endDate)], activeCellColor: .green, activeRangeColor: .green.opacity(0.5), disabledCellFontColor: .white, activeCellFont: .caption2, disabledCellFont: .caption, activeStrokeColor: .yellow, disabledCellFillColor: .gray,
+                MonthCalendarDatePicker(selectedDate: $selectedDate, activeDateRanges: [DateRange(startDate: startDate, endDate: endDate)], activeCellColor: .green, activeRangeColor: .blue, disabledCellFontColor: .white, activeCellFont: .caption2, disabledCellFont: .caption, activeStrokeColor: .yellow, disabledCellFillColor: .gray,
                                         outOfRangeCellFillColor: .red,
                                         activeCellFontColor: .white, showOverlay: true, headerFont: .title, chevronSize: 10, chevronColor: .blue, daysColor: .black, inactiveDays: [.tuesday], disabledDates: disabledDates)
             }}
