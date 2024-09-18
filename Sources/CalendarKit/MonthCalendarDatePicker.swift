@@ -73,7 +73,7 @@ public struct MonthCalendarDatePicker: View {
         self.disabledCellFont = disabledCellFont
         self.activeStrokeColor = activeStrokeColor
         self.disabledCellFillColor = disabledCellFillColor
-        self.outOfRangeCellFillColor = outOfRangeCellFillColor ?? disabledCellFillColor
+        self.outOfRangeCellFillColor = outOfRangeCellFillColor ?? activeRangeColor
         self.activeCellFontColor = activeCellFontColor
         self.showOverlay = showOverlay
         self.headerColor = headerColor
@@ -133,7 +133,7 @@ public struct MonthCalendarDatePicker: View {
             activeDateRanges: activeDateRanges,
             activeDay: ActiveCell,
             disabledDay: DisabledCell,
-            outOfMonthDay: OutOfMonthDay,
+            outOfMonthDay: OutOfRangeCellView,
             header: Header,
             title: Title,
             inactiveDays: inactiveDays,
@@ -181,12 +181,9 @@ public struct MonthCalendarDatePicker: View {
     }
     
     @ViewBuilder
-    private func OutOfMonthDay(date: Date) -> some View {
-        Text("")
-    }
+    private func OutOfRangeCellView(date: Date) -> some View {}
     
-    
-    //DisableDCell with behaviour for changing displayed month when user taps on part of new/ previous month (outOfRangeDates).
+    //DisabledCell with behaviour for changing displayed month when user taps on part of new/ previous month (outOfRangeDates).
     @ViewBuilder
     private func DisabledCell(date: Date) -> some View {
         
@@ -198,8 +195,7 @@ public struct MonthCalendarDatePicker: View {
             return false
         }) ?? false
         let outOfRangeDates = calendar.compare(date, to: displayMonth, toGranularity: .month) != .orderedSame
-        let fillColor = isActiveDate && outOfRangeDates ? activeCellColor : disabledCellFillColor
-        
+        let fillColor = (isActiveDate && outOfRangeDates ? outOfRangeCellFillColor : disabledCellFillColor)
         
         Button {
             if outOfRangeDates {

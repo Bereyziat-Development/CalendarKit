@@ -21,7 +21,8 @@ public struct CalendarLayout<ActiveDay: View, Header: View, Title: View, Disable
     public let activeDateRanges: [DateRange]?
     public let activeDay: (Date) -> ActiveDay
     public let disabledDay: (Date) -> DisabledDay
-    public let outOfMonthDay: (Date) -> OutOfMonthDay
+    
+    public let outOfRangeCellView: (Date) -> OutOfMonthDay
     public let header: (Date) -> Header
     public let title: (Date) -> Title
     public var startDate: Date?
@@ -29,8 +30,8 @@ public struct CalendarLayout<ActiveDay: View, Header: View, Title: View, Disable
     public var inactiveDays: [Weekday]
     public var disabledDates: [Date]
     public var selectedDateRange: [DateRange]?
-    @State private var rangeStartDate: Date? = nil
-    @State private var rangeEndDate: Date? = nil
+
+
     
     
     public init(
@@ -52,11 +53,11 @@ public struct CalendarLayout<ActiveDay: View, Header: View, Title: View, Disable
         self.activeDateRanges = activeDateRanges
         self.activeDay = activeDay
         self.disabledDay = disableDay
-        self.outOfMonthDay = outOfMonthDay
         self.header = header
         self.title = title
         self.inactiveDays = inactiveDays
         self.disabledDates = disabledDates
+        self.outOfRangeCellView = outOfMonthDay
     }
     
     // MARK: 1) initialize with an optional startDate and an optional endDate
@@ -80,7 +81,7 @@ public struct CalendarLayout<ActiveDay: View, Header: View, Title: View, Disable
             displayMonth: displayMonth,
             activeDateRange: DateRange(startDate: startDate, endDate: endDate),
             activeDay: activeDay,
-            disabledDay: disabledDay,
+            disabledDay: disabledDay, 
             outOfMonthDay: outOfMonthDay,
             header: header,
             title: title,
@@ -108,7 +109,7 @@ public struct CalendarLayout<ActiveDay: View, Header: View, Title: View, Disable
             displayMonth: displayMonth,
             activeDateRanges: [activeDateRange],
             activeDay: activeDay,
-            disableDay: disabledDay,
+            disableDay: disabledDay, 
             outOfMonthDay: outOfMonthDay,
             header: header,
             title: title,
@@ -137,11 +138,11 @@ public struct CalendarLayout<ActiveDay: View, Header: View, Title: View, Disable
         self.activeDateRanges = [activeDateRange]
         self.activeDay = activeDay
         self.disabledDay = disabledDay
-        self.outOfMonthDay = outOfMonthDay
         self.header = header
         self.title = title
         self.disabledDates = disabledDates
         self.inactiveDays = inactiveDays
+        self.outOfRangeCellView = outOfMonthDay
     }
     
     // MARK: 4) initialize with a weekendsActive parameter
@@ -165,7 +166,7 @@ public struct CalendarLayout<ActiveDay: View, Header: View, Title: View, Disable
         self.activeDateRanges = activeDateRanges
         self.activeDay = activeDay
         self.disabledDay = disabledDay
-        self.outOfMonthDay = outOfMonthDay
+        self.outOfRangeCellView = outOfMonthDay
         self.header = header
         self.title = title
         self.disabledDates = disabledDates
@@ -193,7 +194,7 @@ public struct CalendarLayout<ActiveDay: View, Header: View, Title: View, Disable
         self.activeDateRanges = activeDateRanges
         self.activeDay = activeDay
         self.disabledDay = disabledDay
-        self.outOfMonthDay = outOfMonthDay
+        self.outOfRangeCellView = outOfMonthDay
         self.header = header
         self.title = title
         self.inactiveDays = inactiveDays
@@ -216,6 +217,7 @@ public struct CalendarLayout<ActiveDay: View, Header: View, Title: View, Disable
                 ForEach(days.prefix(daysInWeek), id: \.self, content: header)
                 ForEach(days, id: \.self) { date in
                     if isActive(date) {
+                        outOfRangeCellView(date)
                         activeDay(date)
                     } else {
                         disabledDay(date)
