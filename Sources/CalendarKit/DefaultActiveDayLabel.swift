@@ -12,7 +12,7 @@ public func defaultActiveDayLabel(date: Date) -> some View {
     ZStack {
         Circle()
             .fill(.green)
-            .frame(width: 40, height: 40)
+            .frame(width: 50, height: 50)
         
         Text(DateFormatter.dayFormatter.string(from: date))
             .foregroundColor(.black)

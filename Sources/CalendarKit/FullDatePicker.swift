@@ -9,6 +9,23 @@
 import SwiftUI
 
 
+// Custom ViewModifier to apply a global font
+struct GlobalFontModifier: ViewModifier {
+    var size: CGFloat
+    var weight: Font.Weight = .regular
+
+    func body(content: Content) -> some View {
+        content.font(.custom("Zapfino", size: size).weight(weight))
+    }
+}
+
+extension View {
+    // Extension to make applying the global font easy
+    func globalFont(size: CGFloat, weight: Font.Weight = .regular) -> some View {
+        self.modifier(GlobalFontModifier(size: size, weight: weight))
+    }
+}
+
 //TODO: put back the font and sized that were the right one from previous design and just allow to change the fonct familly
 public let defaultFont: Font = .system(size: 14)
 public let defaultAccentColor: Color = .green
@@ -24,6 +41,7 @@ public struct FullDatePicker<ActiveDayLabel: View, CurrentDayLabel: View, Disabl
     @ViewBuilder private let outOfMonthDayLabel: (Date) -> OutOfMonthDayLabel
     private let activeDateRanges: [DateRange]?
     private let font: Font
+    private let fontName: String?
     private let accentColor: Color
     private let inactiveDays: [Weekday]
     private let disabledDates: [Date]
@@ -72,8 +90,20 @@ public struct FullDatePicker<ActiveDayLabel: View, CurrentDayLabel: View, Disabl
         self.disabledDates = disabledDates
         
         self.font = font
+        //TODO: to add as an attribute of the init
+        self.fontName = nil
         self.accentColor = accentColor
         self.selectedDateRange = selectedDateRange
+    }
+    
+    func customFont(size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        //TODO: define if using fixedSize or not
+        if let fontName {
+            Font.custom(fontName, fixedSize: size).weight(weight)
+        } else {
+            Font.system(size: size, weight: weight)
+        }
+        
     }
     
     // MARK: 1) initialize with an optional startDate and an optional endDate
@@ -260,6 +290,7 @@ public struct FullDatePicker<ActiveDayLabel: View, CurrentDayLabel: View, Disabl
         HStack {
             Text(DateFormatter.monthYear.string(from: date).capitalized)
                 .padding(.vertical)
+                .globalFont(size: 30)
             
             Spacer()
             
@@ -404,6 +435,7 @@ fileprivate struct ExampleView: View {
                 disabledDates: disabledDates
             )
         }
+        .environment(\.font, Font.custom("Zapfino", size: 10))
     }
 }
 
