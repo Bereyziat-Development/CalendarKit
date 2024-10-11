@@ -31,11 +31,3 @@ public struct DateRange {
         return isWithinRange
     }
 }
-
-public enum Constant {
-    public enum Time {
-        public static let _2DaysInSeconds: Double = 172_800
-        public static let _2MonthInSeconds: Double = 5_260_000
-        public static let calendar = Calendar(identifier: .gregorian)
-    }
-}

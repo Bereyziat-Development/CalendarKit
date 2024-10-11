@@ -15,4 +15,5 @@ public extension DateFormatter {
     static let fullDate = DateFormatter(dateFormat: "EEEE dd MMMM yyyy")
     static let weekDay = DateFormatter(dateFormat: "E")
     static let monthYear = DateFormatter(dateFormat: "LLLL y")
+    static let month = DateFormatter(dateFormat: "MMMM")
 }
